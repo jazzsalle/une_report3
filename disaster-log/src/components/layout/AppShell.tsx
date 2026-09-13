@@ -10,11 +10,12 @@ import { useAppStore } from "@/store/useAppStore";
 import { useHydrated } from "@/lib/useHydrated";
 import { cn } from "@/lib/utils";
 import { ToastProvider } from "@/components/ui";
-import { IconDashboard, IconNew, IconBook, IconSettings, IconLinkOn, IconLinkOff, LogoSop, IconBell } from "@/components/icons";
+import { IconDashboard, IconNew, IconBook, IconSettings, IconLinkOn, IconLinkOff, LogoSop, IconBell, IconFlow } from "@/components/icons";
 
 const NAV = [
   { href: "/", label: "대시보드", icon: <IconDashboard size={20} /> },
   { href: "/situations/new", label: "새 업무 시작", icon: <IconNew size={20} /> },
+  { href: "/sops", label: "SOP 관리", icon: <IconFlow size={20} /> },
   { href: "/manuals", label: "매뉴얼·Seed 조치", icon: <IconBook size={20} /> },
   { href: "/settings", label: "설정·연계상태", icon: <IconSettings size={20} /> },
 ];
@@ -57,6 +58,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (pathname === "/") return "대시보드";
     if (pathname === "/situations/new") return "새 업무 시작";
     if (pathname === "/manuals") return "매뉴얼·Seed 조치";
+    if (pathname === "/sops") return "SOP 라이브러리";
+    if (pathname?.startsWith("/sops/")) return "SOP 편집";
     if (pathname === "/settings") return "설정·연계상태";
     if (pathname?.startsWith("/situations/")) {
       const id = pathname.split("/")[2];
@@ -105,7 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <aside className="no-print hidden md:flex w-[240px] shrink-0 flex-col bg-[var(--color-surface-primary)] border-r border-[var(--color-border-subtle)] sticky top-[50px] h-[calc(100vh-50px)] overflow-y-auto">
             <nav className="px-[12rem] pt-[16rem] flex flex-col gap-[4rem]">
               {NAV.map((n) => (
-                <LnbItem key={n.href} type="parent" size="md" label={n.label} leadingIcon={n.icon} href={n.href} selected={pathname === n.href} onClick={go(n.href)} />
+                <LnbItem key={n.href} type="parent" size="md" label={n.label} leadingIcon={n.icon} href={n.href} selected={pathname === n.href || (n.href !== "/" && pathname?.startsWith(n.href + "/"))} onClick={go(n.href)} />
               ))}
             </nav>
             <div className="px-[24rem] pt-[20rem] pb-[6rem] typo-body-sm font-medium text-[var(--color-text-tertiary)]">진행 중 업무</div>

@@ -5,29 +5,57 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { IconButton, Badge as DsBadge, Checkbox as DsCheckbox } from "@une-front/react-ui";
 import type { NodeKind, Situation, SopEdge, SopNode, SubMission } from "@/lib/types";
 import { useAppStore } from "@/store/useAppStore";
-import { Badge, Button, Dots, EmptyState, Modal, SelectBox, TextArea, TextInput, useToast } from "@/components/ui";
-import { IconAi, IconPlus, IconNodeDecision, IconAnnounce, IconStorage, IconPlay, IconCheckCircle, IconArrowRight, IconClock, IconTrash, IconStop, IconArrowUp, IconInfo, IconNodeProcess } from "@/components/icons";
+import { Badge, Button, Dots, Modal, SelectBox, TextArea, TextInput, useToast } from "@/components/ui";
+import { IconAi, IconPlus, IconNodeDecision, IconAnnounce, IconStorage, IconCheckCircle, IconArrowRight, IconClock, IconTrash, IconStop, IconArrowUp, IconInfo, IconNodeProcess } from "@/components/icons";
 import { SopCanvas } from "@/components/sop/SopCanvas";
+import { LibraryPicker } from "@/components/sop/LibraryPicker";
+import Link from "next/link";
+import { Card as DsCard } from "@une-front/react-ui";
+import { IconDocsCheck, IconList, IconSave, IconFlow } from "@/components/icons";
 import { streamSopGeneration, type StreamMeta } from "@/lib/ai/stream";
 import { toEdges, toNode } from "@/lib/sop/converters";
 import { NODE_SIZE, type CompnSaveParams } from "@/lib/sop/compn";
 import { cn, fmtDateTime, uid } from "@/lib/utils";
 
-const STATUS_LABEL: Record<string, string> = { searching: "관련 정보 검색 중", reranking: "정보 우선순위 정렬 중", generating: "SOP 생성 중", end: "생성 완료" };
-const KIND_LABEL: Record<NodeKind, string> = { start: "시작", end: "종료", process: "프로세스", decision: "상황판단", spread: "상황전파", resource: "자원" };
+export const STATUS_LABEL: Record<string, string> = { searching: "관련 정보 검색 중", reranking: "정보 우선순위 정렬 중", generating: "SOP 생성 중", end: "생성 완료" };
+export const KIND_LABEL: Record<NodeKind, string> = { start: "시작", end: "종료", process: "프로세스", decision: "상황판단", spread: "상황전파", resource: "자원" };
 
-export function SopTab({ s, onNext }: { s: Situation; onNext: () => void }) {
+export function SopTab({ s, onNext, onGoDocs }: { s: Situation; onNext: () => void; onGoDocs?: () => void }) {
   return (
     <ReactFlowProvider>
-      <SopTabInner s={s} onNext={onNext} />
+      <SopTabInner s={s} onNext={onNext} onGoDocs={onGoDocs} />
     </ReactFlowProvider>
   );
 }
 
-function SopTabInner({ s, onNext }: { s: Situation; onNext: () => void }) {
+function SopTabInner({ s, onNext, onGoDocs }: { s: Situation; onNext: () => void; onGoDocs?: () => void }) {
   const toast = useToast();
   const st = useAppStore();
   const active = s.sopVersions.find((v) => v.id === s.activeSopVersionId);
+  const [libOpen, setLibOpen] = useState(false);
+  const linkedTemplate = active?.templateId ? st.templates[active.templateId] : undefined;
+  const publishedCount = Object.values(st.templates).filter((t) => t.status === "published").length;
+
+  // 라이브러리 게시본 → 이 상황에 배포(실행본). start=true 면 바로 실행 탭으로
+  const handleDeploy = (templateId: string, start: boolean) => {
+    const vid = st.deployTemplate(s.id, templateId, { start });
+    setLibOpen(false);
+    if (!vid) return toast.error("배포에 실패했습니다");
+    toast.success(start ? "라이브러리 SOP 를 배포하고 실행을 시작했습니다" : "라이브러리 SOP 를 실행본으로 배포했습니다");
+    if (start) onNext();
+  };
+  const handlePush = () => {
+    if (!active) return;
+    if (linkedTemplate) {
+      st.pushToLibrary(s.id, active.id);
+      toast.success(`라이브러리 「${linkedTemplate.name}」 초안에 반영했습니다 (게시는 라이브러리에서)`);
+    } else {
+      const name = prompt("라이브러리에 저장할 SOP 이름", `${s.title} SOP`);
+      if (!name) return;
+      st.pushToLibrary(s.id, active.id, undefined, name);
+      toast.success("라이브러리에 새 SOP 초안으로 저장했습니다");
+    }
+  };
   const [selId, setSelId] = useState<string | null>(null);
   const [selEdge, setSelEdge] = useState<string | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
@@ -150,10 +178,32 @@ function SopTabInner({ s, onNext }: { s: Situation; onNext: () => void }) {
   const aiModal = <AiModal open={aiOpen} onClose={() => setAiOpen(false)} query={query} setQuery={setQuery} submitted={submitted} status={llmStatus} preview={preview} meta={meta} isGenerating={isGenerating} onGenerate={handleGenerate} onStop={handleStop} />;
 
   if (!active) {
+    const options = [
+      { key: "lib", icon: <IconFlow size={24} />, title: "라이브러리에서 선택", desc: `미리 만들어 둔 게시 SOP(${publishedCount}개)를 골라 배포하고 바로 실행합니다. 실행과 편집이 분리되어 원본은 바뀌지 않습니다.`, cta: "라이브러리에서 선택", primary: true, onClick: () => setLibOpen(true), cls: "bg-[var(--color-surface-brand-subtle)] text-[var(--color-icon-brand)]" },
+      { key: "docs", icon: <IconDocsCheck size={24} />, title: "문서·조치 선택으로 구성", desc: "관련 문서 → 조치 상세 일괄 수신 → 조치 선택·정렬로 이 상황 전용 SOP 를 새로 구성합니다. 라이브러리에도 초안으로 저장됩니다.", cta: "문서·조치 선택으로", onClick: () => onGoDocs?.(), cls: "bg-[var(--color-surface-success-subtle)] text-[var(--color-icon-success)]" },
+      { key: "ai", icon: <IconAi size={24} />, title: "AI 자유생성", desc: "자연어로 상황을 설명하면 UNI RAG 가 SOP 컴포넌트를 생성해 캔버스에 그립니다(접속 불가 시 Seed 로 대체).", cta: "AI 로 생성", onClick: () => setAiOpen(true), cls: "bg-[var(--purple-25)] text-[var(--purple-600)]" },
+    ];
     return (
-      <div className="p-[28rem]">
-        <EmptyState icon={<IconFlow2 />} title="구성된 SOP가 없습니다" desc="문서·조치 선택 단계에서 조치를 선택하면 기본 순차 Flow가 자동 구성됩니다. 또는 자연어로 상황을 설명해 AI SOP를 생성할 수 있습니다." action={<Button leftIcon={<IconAi size={16} />} onClick={() => setAiOpen(true)}>AI SOP 자유생성</Button>} />
+      <div className="p-[28rem] max-w-[1100px] mx-auto">
+        <div className="mb-[16rem]">
+          <div className="typo-body-lg font-medium text-[var(--color-text-primary)]">이 상황에서 실행할 SOP 를 정하세요</div>
+          <div className="typo-body-sm text-[var(--color-text-tertiary)] mt-[2rem]">S07 · 실행할 SOP 는 「라이브러리 게시본 배포」 또는 「이 상황에서 구성 → 실행본 확정」 두 경로로 준비됩니다.</div>
+        </div>
+        <div className="grid md:grid-cols-3 gap-[12rem]">
+          {options.map((o) => (
+            <DsCard key={o.key} cardStyle="outline" onClick={o.onClick} className="!rounded-xl">
+              <DsCard.Body className="!p-[20rem] w-full flex flex-col gap-[12rem] h-full">
+                <div className={cn("size-[48rem] rounded-xl grid place-items-center", o.cls)}>{o.icon}</div>
+                <div className="typo-body-lg font-medium text-[var(--color-text-primary)]">{o.title}</div>
+                <div className="typo-body-sm text-[var(--color-text-tertiary)] leading-relaxed flex-1">{o.desc}</div>
+                <Button variant={o.primary ? "primary" : "outline"} size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); o.onClick(); }}>{o.cta}</Button>
+              </DsCard.Body>
+            </DsCard>
+          ))}
+        </div>
+        <div className="mt-[12rem] typo-body-sm text-[var(--color-text-helper)]">라이브러리가 비어 있으면 <Link href="/sops" className="text-[var(--color-text-brand)] underline">SOP 관리</Link>에서 「기본 SOP 불러오기」 또는 새 SOP 를 만들어 게시하세요.</div>
         {aiModal}
+        <LibraryPicker open={libOpen} onClose={() => setLibOpen(false)} disasterType={s.disasterType} onDeployed={handleDeploy} />
       </div>
     );
   }
@@ -170,6 +220,9 @@ function SopTabInner({ s, onNext }: { s: Situation; onNext: () => void }) {
         <Button size="sm" variant="ghost" disabled={isGenerating || (!selId && !selEdge)} leftIcon={<IconTrash size={16} />} onClick={deleteSelected}>삭제</Button>
         <span className="w-px h-[24rem] bg-[var(--color-border-default)] mx-[4rem]" />
         <Button size="sm" disabled={isGenerating} leftIcon={<IconAi size={16} />} onClick={() => setAiOpen(true)}>AI 생성</Button>
+        <span className="w-px h-[24rem] bg-[var(--color-border-default)] mx-[4rem]" />
+        <Button size="sm" variant="outline" disabled={isGenerating} leftIcon={<IconList size={16} />} onClick={() => setLibOpen(true)}>라이브러리에서 배포</Button>
+        <Button size="sm" variant="outline" disabled={isGenerating} leftIcon={<IconSave size={16} />} onClick={handlePush} title={linkedTemplate ? `「${linkedTemplate.name}」 초안에 반영` : "라이브러리에 새 SOP 로 저장"}>{linkedTemplate ? "라이브러리에 반영" : "라이브러리에 저장"}</Button>
         <div className="ml-auto flex items-center gap-[8rem]">
           <div className="w-[260rem]">
             <SelectBox size="xs" value={active.id} onChange={(v) => st.setActiveSop(s.id, v)} options={s.sopVersions.map((v) => ({ value: v.id, label: `v${v.version} · ${v.label}` }))} />
@@ -220,7 +273,7 @@ function SopTabInner({ s, onNext }: { s: Situation; onNext: () => void }) {
                         <span className="typo-body-sm text-[var(--color-text-basic)]">{v.label}</span>
                         <DsBadge className="ml-auto" label={v.kind === "confirmed" ? "실행본" : v.kind === "edited" ? "수정본" : "추천"} color={v.kind === "confirmed" ? "success" : v.kind === "edited" ? "light-warning" : "primary"} variant="solid-pastel" size="xs" />
                       </div>
-                      <div className="typo-body-sm text-[var(--color-text-tertiary)] mt-[2rem]">{fmtDateTime(v.createdAt)} · {v.createdBy} · 노드 {v.nodes.length}{v.note ? ` · ${v.note}` : ""}</div>
+                      <div className="typo-body-sm text-[var(--color-text-tertiary)] mt-[2rem]">{fmtDateTime(v.createdAt)} · {v.createdBy} · 노드 {v.nodes.length}{v.note ? ` · ${v.note}` : ""}{v.templateId && st.templates[v.templateId] ? ` · 라이브러리 「${st.templates[v.templateId].name}」` : ""}</div>
                     </button>
                   ))}
                 </div>
@@ -232,6 +285,7 @@ function SopTabInner({ s, onNext }: { s: Situation; onNext: () => void }) {
       </div>
 
       {aiModal}
+      <LibraryPicker open={libOpen} onClose={() => setLibOpen(false)} disasterType={s.disasterType} onDeployed={handleDeploy} />
 
       <Modal
         open={confirmOpen}
@@ -261,12 +315,8 @@ function SopTabInner({ s, onNext }: { s: Situation; onNext: () => void }) {
   );
 }
 
-function IconFlow2() {
-  return <IconPlay size={28} />;
-}
-
 // ── 노드 상세 패널 ───────────────────────────────────────────────────────────
-function NodePanel({ node, nodes, edges, onPatch, onPatchEdge, readOnly }: { node: SopNode; nodes: SopNode[]; edges: SopEdge[]; onPatch: (fn: (n: SopNode) => SopNode) => void; onPatchEdge: (id: string, patch: Partial<SopEdge>) => void; readOnly: boolean }) {
+export function NodePanel({ node, nodes, edges, onPatch, onPatchEdge, readOnly }: { node: SopNode; nodes: SopNode[]; edges: SopEdge[]; onPatch: (fn: (n: SopNode) => SopNode) => void; onPatchEdge: (id: string, patch: Partial<SopEdge>) => void; readOnly: boolean }) {
   const d = node.data;
   const outs = edges.filter((e) => e.source === node.id);
   const setData = (patch: Partial<SopNode["data"]>) => onPatch((n) => ({ ...n, data: { ...n.data, ...patch } }));
@@ -365,7 +415,7 @@ function NodePanel({ node, nodes, edges, onPatch, onPatchEdge, readOnly }: { nod
 }
 
 // ── AI 생성 모달 (원본 AiGenerateButton UI 이식) ────────────────────────────
-function AiModal({ open, onClose, query, setQuery, submitted, status, preview, meta, isGenerating, onGenerate, onStop }: { open: boolean; onClose: () => void; query: string; setQuery: (v: string) => void; submitted: string; status: string | null; preview: CompnSaveParams[]; meta: StreamMeta | null; isGenerating: boolean; onGenerate: (q: string) => void; onStop: () => void }) {
+export function AiModal({ open, onClose, query, setQuery, submitted, status, preview, meta, isGenerating, onGenerate, onStop }: { open: boolean; onClose: () => void; query: string; setQuery: (v: string) => void; submitted: string; status: string | null; preview: CompnSaveParams[]; meta: StreamMeta | null; isGenerating: boolean; onGenerate: (q: string) => void; onStop: () => void }) {
   const examples = useMemo(() => ["부산 호우경보 발효, 온천천 하상도로 침수 시작. 초기대응 SOP 구성", "태풍경보 발효 시 해안가 월파 우려지역 주민 사전대피 절차", "기상특보 해제 이후 재해취약지 사후점검 및 피해복구 절차", "산불 발생 시 국립공원 탐방객 통제 및 진화지원 절차"], []);
   return (
     <Modal open={open} onClose={onClose} title="AI SOP 생성" description="자연어로 상황을 설명하면 UNI RAG(/chat/json)가 SOP 컴포넌트를 생성해 캔버스에 실시간으로 그립니다. 접속이 불가하면 Seed 조치로 로컬 생성됩니다." size="md">

@@ -8,6 +8,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { Badge, Button, Card, EmptyState, Field, Modal, SelectBox, TextArea, TextInput, useToast } from "@/components/ui";
 import { IconPlay, IconStop, IconCheckCircle, IconSkip, IconMessage, IconStorage, IconAttach, IconNodeDecision, IconArrowRight, IconDocsCheck, IconAnnounce, IconSend, IconRefresh, IconMemo } from "@/components/icons";
 import { SopCanvas } from "@/components/sop/SopCanvas";
+import { LibraryPicker } from "@/components/sop/LibraryPicker";
 import { orderedNodeIds } from "@/lib/sop/converters";
 import { cn, fmtDateTime, fmtTime, nowIso } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ export function RunTab({ s, onNext }: { s: Situation; onNext: () => void }) {
   const [smsOpen, setSmsOpen] = useState(false);
   const [resOpen, setResOpen] = useState(false);
   const [view, setView] = useState<"list" | "canvas">("list");
+  const [libOpen, setLibOpen] = useState(false);
 
   const ordered = useMemo(() => (active ? orderedNodeIds(active.nodes, active.edges) : []), [active]);
   const nodes = useMemo(() => active?.nodes ?? [], [active]);
@@ -33,7 +35,14 @@ export function RunTab({ s, onNext }: { s: Situation; onNext: () => void }) {
     return { total: work.length, done: work.filter((n) => s.runs[n.id]?.status === "done").length, running: work.filter((n) => s.runs[n.id]?.status === "running").length };
   }, [nodes, s.runs]);
 
-  if (!active) return <div className="p-[28rem]"><EmptyState icon={<IconPlay size={28} />} title="실행할 SOP가 없습니다" desc="SOP 구성·편집 단계에서 실행본을 확정하세요." /></div>;
+  if (!active)
+    return (
+      <div className="p-[28rem]">
+        <EmptyState icon={<IconPlay size={28} />} title="실행할 SOP가 없습니다" desc="라이브러리에 게시된 SOP 를 선택해 바로 실행하거나, SOP 구성·편집 단계에서 이 상황 전용 SOP 를 만들고 실행본으로 확정하세요."
+          action={<Button leftIcon={<IconPlay size={16} />} onClick={() => setLibOpen(true)}>라이브러리에서 선택해 바로 실행</Button>} />
+        <LibraryPicker open={libOpen} onClose={() => setLibOpen(false)} disasterType={s.disasterType} onDeployed={(tid, start) => { const vid = st.deployTemplate(s.id, tid, { start }); setLibOpen(false); if (vid) toast.success(start ? "배포 후 실행을 시작했습니다" : "실행본으로 배포했습니다"); }} />
+      </div>
+    );
   const isConfirmed = active.kind === "confirmed";
 
   return (

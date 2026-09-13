@@ -85,7 +85,7 @@ export default function SituationPage() {
       <div className="flex-1 min-h-0">
         {tab === "overview" && <OverviewTab s={s} onNext={() => setTab("docs")} />}
         {tab === "docs" && <DocsActionsTab s={s} onNext={() => setTab("sop")} />}
-        {tab === "sop" && <SopTab s={s} onNext={() => setTab("run")} />}
+        {tab === "sop" && <SopTab s={s} onNext={() => setTab("run")} onGoDocs={() => setTab("docs")} />}
         {tab === "run" && <RunTab s={s} onNext={() => setTab("log")} />}
         {tab === "log" && <LogTab s={s} onNext={() => setTab("report")} />}
         {tab === "report" && <ReportTab s={s} />}

@@ -41,6 +41,18 @@ npm run dev                   # http://localhost:3000
 - 아이콘은 DS `Icon*` 를 우선 사용하고 배포판(0.46.1)에 없는 `IconNode*`·눈송이만 lucide 로 대체.
 - DS 오버레이(Toast/Modal/Select)는 `document` 포털을 쓰므로 `AppShell` 은 클라이언트 마운트 후 렌더한다(SSR 시 빈 배경).
 
+## SOP 라이브러리 — 편집과 실행의 분리
+
+- **`/sops` SOP 관리**: 상황과 독립된 SOP 목록. 재난유형·게시상태 필터, 검색, 복제·삭제, JSON 가져오기/내보내기, 「기본 SOP 불러오기」(호우 초기대응·태풍 주민대피·산불 초동조치 3종).
+- **`/sops/[id]` 편집기**: 빈 캔버스 / 매뉴얼 조치 선택 / AI 생성으로 구성 → 상황판단·분기 편집 → **게시**. 편집 내용은 초안(draft)에만 저장되고, 게시(published)본이 실행 가능 버전이다. 게시 이력·상황 배포 이력을 우측 패널에서 확인.
+- **상황에서의 실행**: 상황 SOP 탭이 비어 있으면 「라이브러리에서 선택 / 문서·조치로 구성 / AI 생성」 3가지 시작 방법을 제시. 라이브러리 게시본을 배포하면 **스냅샷**이 상황의 실행본(v1)으로 복사되어 실행 이력이 원본과 분리된다. 「배포 후 바로 실행」으로 실행 탭까지 한 번에 이동.
+- **역방향 반영**: 상황에서 급히 수정한 SOP 는 「라이브러리에 반영/저장」으로 템플릿 초안에 되돌려 보낼 수 있다(게시는 라이브러리에서). 문서·조치 선택으로 만든 SOP 도 자동으로 라이브러리 초안에 저장된다.
+- 데이터: `SopTemplate`(draft / published / history / usage) — `src/lib/types.ts`, 액션은 `useAppStore` 의 `createTemplate · publishTemplate · deployTemplate · pushToLibrary` 등.
+
+## Vercel 배포
+
+이 저장소는 앱이 `disaster-log/` 하위 폴더에 있는 모노레포 구조이므로 Vercel 프로젝트 설정에서 **Root Directory 를 `disaster-log`** 로 지정해야 한다(미지정 시 404). 환경변수는 `.env.example` 의 `UNI_*` 를 등록하면 되고, 등록하지 않아도 로컬 대체 생성 모드로 동작한다.
+
 ## 보고서·상황일지 편집/출력 (Markdown)
 
 - 상황일지·결과보고 본문은 **Markdown** 이다. AI 초안도 Markdown 으로 생성되고(`## 섹션`, `- ` 불릿, `**굵게**`, GFM 표), 편집 탭에서 직접 수정하며 미리보기(`react-markdown`)로 확인한다.

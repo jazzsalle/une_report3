@@ -6,9 +6,35 @@
 import { useAppStore } from "@/store/useAppStore";
 import { mockT3Q } from "@/lib/t3q/adapter";
 import { mockWeatherAlerts } from "@/lib/seed/weather";
-import { FLOOD_CORE_CODES } from "@/lib/seed/flood";
+import { FLOOD_ACTIONS, FLOOD_CORE_CODES } from "@/lib/seed/flood";
+import { WILDFIRE_ACTIONS } from "@/lib/seed/wildfire";
+import { actionsToCompns } from "@/lib/sop/adapter";
+import { compnsToFlow } from "@/lib/sop/converters";
+
+/** 기본 SOP 라이브러리 3종 (이미 있으면 건너뜀). 생성된 개수 반환 */
+export function seedTemplates(): number {
+  const st = useAppStore.getState();
+  const existing = new Set(Object.values(st.templates).map((t) => t.name));
+  const defs: { name: string; description: string; disasterTypes: ("flood" | "typhoon" | "heavy_snow" | "wildfire")[]; tags: string[]; codes: string[]; pool: typeof FLOOD_ACTIONS }[] = [
+    { name: "호우 초기대응 표준 SOP", description: "부산광역시 풍수해 현장조치 행동매뉴얼 초기대응(4-1~6-7) 기반 표준 절차", disasterTypes: ["flood"], tags: ["부산광역시", "초기대응"], codes: ["4-1", "5-1", "5-2", "6-1", "6-2", "6-3", "6-4", "6-5", "6-6", "6-7"], pool: FLOOD_ACTIONS },
+    { name: "태풍 주민 사전대피 SOP", description: "태풍특보 시 인명피해 우려지역 사전대피·대피명령·안전취약계층 고려 절차", disasterTypes: ["typhoon", "flood"], tags: ["부산광역시", "주민대피"], codes: ["4-1", "5-2", "40-5", "41-1", "11-1", "12-1"], pool: FLOOD_ACTIONS },
+    { name: "산불 초동조치 SOP", description: "환경부 산불 실무매뉴얼 발생상황 조치(가-1 ~ 다-2) 기반", disasterTypes: ["wildfire"], tags: ["환경부", "초동조치"], codes: ["가-1", "가-2", "나-1", "나-2", "다-0", "다-2"], pool: WILDFIRE_ACTIONS },
+  ];
+  let n = 0;
+  for (const d of defs) {
+    if (existing.has(d.name)) continue;
+    const actions = d.codes.map((c) => d.pool.find((a) => a.code === c)).filter(Boolean) as typeof FLOOD_ACTIONS;
+    if (!actions.length) continue;
+    const compns = actionsToCompns(actions, d.tags[0]);
+    const { nodes, edges } = compnsToFlow(compns, actions);
+    st.createTemplate({ name: d.name, description: d.description, disasterTypes: d.disasterTypes, tags: d.tags, nodes, edges, source: "actions", publish: true });
+    n++;
+  }
+  return n;
+}
 
 export async function createDemoSituation(): Promise<string> {
+  seedTemplates();
   const st = useAppStore.getState();
   const base = new Date();
   base.setHours(base.getHours() - 6);
@@ -69,6 +95,7 @@ export async function createDemoSituation(): Promise<string> {
 }
 
 export async function createDemoTraining(): Promise<string> {
+  seedTemplates();
   const st = useAppStore.getState();
   const base = new Date();
   const id = st.createSituation({

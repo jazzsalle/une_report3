@@ -157,6 +157,45 @@ export interface SopVersion {
   nodes: SopNode[];
   edges: SopEdge[];
   note?: string;
+  /** 라이브러리에서 배포된 경우 원본 템플릿과 게시 버전 */
+  templateId?: string;
+  templateVersion?: number;
+}
+
+// ── SOP 라이브러리 (상황과 독립된 SOP 템플릿 · 편집/게시 분리) ─────────────
+
+export type SopTemplateStatus = "draft" | "published";
+export type SopTemplateSource = "manual" | "actions" | "ai" | "situation";
+
+export interface SopPublished {
+  version: number;
+  nodes: SopNode[];
+  edges: SopEdge[];
+  publishedAt: string;
+  publishedBy: string;
+  note?: string;
+}
+
+export interface SopTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  disasterTypes: DisasterType[];
+  stage?: Stage;
+  tags: string[];
+  status: SopTemplateStatus;
+  /** 편집 중인 초안 (실행 불가) */
+  draft: { nodes: SopNode[]; edges: SopEdge[] };
+  /** 게시본 (실행 가능) — 게시 시점 스냅샷 */
+  published?: SopPublished;
+  /** 게시 이력 */
+  history: { version: number; publishedAt: string; publishedBy: string; note?: string; nodeCount: number }[];
+  /** 상황에 배포된 이력 */
+  usage: { situationId: string; situationTitle: string; deployedAt: string; version: number }[];
+  source: SopTemplateSource;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
 }
 
 // ── 실행 (UFR-005) ───────────────────────────────────────────────────────────

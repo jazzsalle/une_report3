@@ -7,7 +7,7 @@ import { Card as DsCard, IconButton } from "@une-front/react-ui";
 import { useHydrated } from "@/lib/useHydrated";
 import { useAppStore } from "@/store/useAppStore";
 import { AlertBadge, Button, Card, EmptyState, ModeBadge, Stat, useToast } from "@/components/ui";
-import { IconAi, IconNew, IconTrash, IconArrowRight, IconMonitoring, IconDocument, IconMessage, IconStorage, IconAnnounce, IconCheckCircle, IconPlay } from "@/components/icons";
+import { IconAi, IconNew, IconTrash, IconArrowRight, IconMonitoring, IconDocument, IconMessage, IconStorage, IconAnnounce, IconCheckCircle, IconPlay, IconFlow } from "@/components/icons";
 import { DISASTER_LABEL } from "@/lib/seed/regions";
 import { cn, fmtDateTime, relTime } from "@/lib/utils";
 import { createDemoSituation, createDemoTraining } from "@/lib/demo";
@@ -31,6 +31,8 @@ export default function DashboardPage() {
   const order = useAppStore((s) => s.order);
   const situations = useAppStore((s) => s.situations);
   const deleteSituation = useAppStore((s) => s.deleteSituation);
+  const templates = useAppStore((s) => s.templates);
+  const publishedCount = hydrated ? Object.values(templates).filter((t) => t.status === "published").length : 0;
 
   const list = useMemo(() => (hydrated ? order.map((id) => situations[id]).filter(Boolean) : []), [hydrated, order, situations]);
   const totals = useMemo(() => {
@@ -76,12 +78,18 @@ export default function DashboardPage() {
             <Button size="lg" variant="outline" leftIcon={<IconAi size={16} />} loading={busy === "training"} onClick={() => runDemo("training")}>
               안전한국훈련 Seed 불러오기
             </Button>
+            <Link href="/sops">
+              <Button size="lg" variant="ghost" leftIcon={<IconFlow size={16} />}>
+                SOP 라이브러리
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-[12rem]">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-[12rem]">
+        <Link href="/sops" className="contents"><Stat label="SOP 라이브러리" value={publishedCount} sub={hydrated ? `전체 ${Object.keys(templates).length} · 게시 ${publishedCount}` : undefined} tone="blue" icon={<IconFlow size={20} />} /></Link>
         <Stat label="업무(상황)" value={list.length} sub={`실제 ${list.filter((s) => s.mode === "actual").length} · 훈련 ${list.filter((s) => s.mode === "training").length}`} icon={<IconMonitoring size={20} />} />
         <Stat label="완료된 조치" value={totals.runs} tone="green" icon={<IconCheckCircle size={20} />} />
         <Stat label="SMS 발송" value={totals.sms} tone="purple" icon={<IconMessage size={20} />} />

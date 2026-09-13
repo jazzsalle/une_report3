@@ -25,6 +25,8 @@ import type {
   SmsRecord,
   SopEdge,
   SopNode,
+  SopTemplate,
+  SopTemplateSource,
   SopVersion,
   SourceKind,
   TrainingPlan,
@@ -53,6 +55,21 @@ interface AppState {
   situations: Record<string, Situation>;
   order: string[];
   uniStatus: { reachable: boolean; model?: string; checkedAt?: string; error?: string } | null;
+
+  /** SOP 라이브러리 */
+  templates: Record<string, SopTemplate>;
+  templateOrder: string[];
+  createTemplate(input: { name: string; description?: string; disasterTypes: DisasterType[]; tags?: string[]; nodes?: SopNode[]; edges?: SopEdge[]; source?: SopTemplateSource; publish?: boolean }): string;
+  updateTemplateMeta(id: string, patch: Partial<Pick<SopTemplate, "name" | "description" | "disasterTypes" | "tags" | "stage">>): void;
+  updateTemplateDraft(id: string, nodes: SopNode[], edges: SopEdge[]): void;
+  publishTemplate(id: string, note?: string): void;
+  duplicateTemplate(id: string): string | undefined;
+  deleteTemplate(id: string): void;
+  importTemplate(t: SopTemplate): void;
+  /** 라이브러리 게시본 → 상황에 배포(실행본 스냅샷) */
+  deployTemplate(situationId: string, templateId: string, opts?: { start?: boolean }): string | undefined;
+  /** 상황에서 편집한 SOP → 라이브러리 초안에 반영 (templateId 없으면 새 템플릿 생성) */
+  pushToLibrary(situationId: string, versionId: string, templateId?: string, name?: string): string | undefined;
 
   setUser(u: { name: string; dept: string }): void;
   setUniStatus(s: AppState["uniStatus"]): void;
@@ -131,6 +148,8 @@ export const useAppStore = create<AppState>()(
         situations: {},
         order: [],
         uniStatus: null,
+        templates: {},
+        templateOrder: [],
 
         setUser: (u) => set({ user: u }),
         setUniStatus: (s) => set({ uniStatus: s }),
@@ -254,7 +273,9 @@ export const useAppStore = create<AppState>()(
           if (actions.length === 0) return;
           const compns = actionsToCompns(actions, s.organization);
           const { nodes, edges } = compnsToFlow(compns, actions);
-          const vid = get().addSopVersion(id, { label: "추천 원본(기본 순차 Flow)", kind: "recommended", nodes, edges, note: `선택 조치 ${actions.length}건 → 기본 Process 노드 순차 연결` }, true);
+          // 라이브러리에 초안으로 함께 저장 (상황 종료 후에도 재사용 가능)
+          const tid = get().createTemplate({ name: `${s.title} 기본 SOP`, description: `문서·조치 선택으로 자동 구성 (선택 조치 ${actions.length}건)`, disasterTypes: [s.disasterType], tags: [s.organization, actions[0]?.stage ?? ""].filter(Boolean), nodes, edges, source: "actions" });
+          const vid = get().addSopVersion(id, { label: "추천 원본(기본 순차 Flow)", kind: "recommended", nodes, edges, note: `선택 조치 ${actions.length}건 → 기본 Process 노드 순차 연결`, templateId: tid }, true);
           return vid;
         },
 
@@ -412,6 +433,89 @@ export const useAppStore = create<AppState>()(
             return { resources: s.resources.map((x) => (x.id === resId ? { ...x, returnedAt: nowIso() } : x)), ledger: [...s.ledger, ledgerEv({ type: "resource", title: `자원 회수: ${r.name}`, source: "resource", verify: "confirmed" })] };
           }),
 
+        // ── SOP 라이브러리 ──────────────────────────────────────────────
+        createTemplate: (input) => {
+          const id = uid("TPL-");
+          const now = nowIso();
+          const nodes: SopNode[] = input.nodes ?? [
+            { id: "1", type: "sop", position: { x: 170, y: 40 }, data: { kind: "start", title: "시작", autoRun: true, subMissions: [], ui: {} } },
+            { id: "2", type: "sop", position: { x: 170, y: 340 }, data: { kind: "end", title: "종료", autoRun: true, subMissions: [], ui: {} } },
+          ];
+          const edges: SopEdge[] = input.edges ?? (input.nodes ? [] : [{ id: "xy-edge__1bottom-2top", source: "1", target: "2", sourceHandle: "bottom", targetHandle: "top" }]);
+          const t: SopTemplate = {
+            id,
+            name: input.name,
+            description: input.description,
+            disasterTypes: input.disasterTypes,
+            tags: input.tags ?? [],
+            status: "draft",
+            draft: { nodes, edges },
+            history: [],
+            usage: [],
+            source: input.source ?? "manual",
+            createdAt: now,
+            updatedAt: now,
+            createdBy: get().user.name,
+          };
+          set((st) => ({ templates: { ...st.templates, [id]: t }, templateOrder: [id, ...st.templateOrder] }));
+          if (input.publish) get().publishTemplate(id, "초기 게시");
+          return id;
+        },
+        updateTemplateMeta: (id, patch) => set((st) => (st.templates[id] ? { templates: { ...st.templates, [id]: { ...st.templates[id], ...patch, updatedAt: nowIso() } } } : st)),
+        updateTemplateDraft: (id, nodes, edges) => set((st) => (st.templates[id] ? { templates: { ...st.templates, [id]: { ...st.templates[id], draft: { nodes, edges }, updatedAt: nowIso() } } } : st)),
+        publishTemplate: (id, note) =>
+          set((st) => {
+            const t = st.templates[id];
+            if (!t) return st;
+            const version = (t.published?.version ?? 0) + 1;
+            const now = nowIso();
+            const published = { version, nodes: t.draft.nodes, edges: t.draft.edges, publishedAt: now, publishedBy: get().user.name, note };
+            return { templates: { ...st.templates, [id]: { ...t, status: "published", published, history: [...t.history, { version, publishedAt: now, publishedBy: get().user.name, note, nodeCount: t.draft.nodes.length }], updatedAt: now } } };
+          }),
+        duplicateTemplate: (id) => {
+          const t = get().templates[id];
+          if (!t) return;
+          return get().createTemplate({ name: `${t.name} (복사)`, description: t.description, disasterTypes: t.disasterTypes, tags: t.tags, nodes: t.draft.nodes, edges: t.draft.edges, source: t.source });
+        },
+        deleteTemplate: (id) =>
+          set((st) => {
+            const { [id]: _removed, ...rest } = st.templates;
+            void _removed;
+            return { templates: rest, templateOrder: st.templateOrder.filter((x) => x !== id) };
+          }),
+        importTemplate: (t) => set((st) => ({ templates: { ...st.templates, [t.id]: t }, templateOrder: st.templateOrder.includes(t.id) ? st.templateOrder : [t.id, ...st.templateOrder] })),
+
+        deployTemplate: (situationId, templateId, opts) => {
+          const t = get().templates[templateId];
+          const s = get().situations[situationId];
+          if (!t || !s) return;
+          const src = t.published ?? { version: 0, nodes: t.draft.nodes, edges: t.draft.edges };
+          // 노드/엣지 깊은 복사 — 상황 실행 이력이 라이브러리 원본과 분리되도록 스냅샷
+          const nodes = JSON.parse(JSON.stringify(src.nodes)) as SopNode[];
+          const edges = JSON.parse(JSON.stringify(src.edges)) as SopEdge[];
+          const vid = get().addSopVersion(situationId, { label: `라이브러리 「${t.name}」 v${src.version}`, kind: "confirmed", nodes, edges, note: t.published ? "게시본 배포" : "초안 배포(미게시)", templateId, templateVersion: src.version }, true);
+          set((st) => ({ templates: { ...st.templates, [templateId]: { ...t, usage: [...t.usage, { situationId, situationTitle: s.title, deployedAt: nowIso(), version: src.version }] } } }));
+          if (opts?.start) get().startRun(situationId);
+          return vid;
+        },
+
+        pushToLibrary: (situationId, versionId, templateId, name) => {
+          const s = get().situations[situationId];
+          const v = s?.sopVersions.find((x) => x.id === versionId);
+          if (!s || !v) return;
+          const nodes = JSON.parse(JSON.stringify(v.nodes)) as SopNode[];
+          const edges = JSON.parse(JSON.stringify(v.edges)) as SopEdge[];
+          const target = templateId ?? v.templateId;
+          if (target && get().templates[target]) {
+            get().updateTemplateDraft(target, nodes, edges);
+            patchSit(situationId, (st) => ({ ledger: [...st.ledger, ledgerEv({ type: "sop", title: `SOP 라이브러리 「${get().templates[target].name}」 초안에 반영`, body: `상황 SOP v${v.version} → 라이브러리 (게시 전)`, source: "user", verify: "confirmed" })] }));
+            return target;
+          }
+          const tid = get().createTemplate({ name: name ?? `${s.title} SOP`, description: `상황 「${s.title}」에서 저장`, disasterTypes: [s.disasterType], tags: [s.organization], nodes, edges, source: "situation" });
+          patchSit(situationId, (st) => ({ sopVersions: st.sopVersions.map((x) => (x.id === versionId ? { ...x, templateId: tid } : x)), ledger: [...st.ledger, ledgerEv({ type: "sop", title: `SOP 라이브러리에 새 템플릿으로 저장`, body: name ?? `${s.title} SOP`, source: "user", verify: "confirmed" })] }));
+          return tid;
+        },
+
         updateLog: (id, patch, historyNote) =>
           patchSit(id, (s) => ({
             log: { ...s.log, ...patch, history: historyNote ? [...s.log.history, { at: nowIso(), by: get().user.name, note: historyNote }] : s.log.history },
@@ -427,7 +531,7 @@ export const useAppStore = create<AppState>()(
     {
       name: "disaster-log-store-v1",
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ user: s.user, situations: s.situations, order: s.order }),
+      partialize: (s) => ({ user: s.user, situations: s.situations, order: s.order, templates: s.templates, templateOrder: s.templateOrder }),
     },
   ),
 );
