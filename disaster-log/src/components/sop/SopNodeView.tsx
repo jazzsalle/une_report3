@@ -30,8 +30,9 @@ function SopNodeViewInner({ data, selected }: NodeProps<RFNode>) {
         m.cls,
         isTerminal ? "w-[160px]" : data.kind === "decision" ? "w-[220px]" : "w-[260px]",
         selected && "ring-0",
-        data.isCurrent && "shadow-[0_0_0_4px_var(--green-75)] !border-[var(--color-border-success)]",
-        status === "done" && "opacity-90",
+        data.isCurrent && "sop-node-current !border-[var(--color-border-success)]",
+        status === "done" && "sop-node-done",
+        status === "skipped" && "opacity-55 saturate-50",
       )}
     >
       <Handle type="target" position={Position.Top} id="top" />

@@ -151,12 +151,12 @@ export function RunTab({ s, onNext }: { s: Situation; onNext: () => void }) {
           </div>
         ) : (
           /* 플로우 뷰 — ReactFlow 는 부모의 확정 높이가 필요하므로 명시 높이를 준다 */
-          <div className="relative h-[640px] border-t border-[var(--color-border-subtle)]">
+          <div className="relative h-[max(640px,calc(100vh-330px))] border-t border-[var(--color-border-subtle)]">
             <ReactFlowProvider>
-              <SopCanvas nodes={active.nodes} edges={active.edges} runStatus={s.runs} currentNodeId={s.currentNodeId} readOnly onSelect={(n) => n && setSelId(n)} fitKey={1} />
+              <SopCanvas nodes={active.nodes} edges={active.edges} runStatus={s.runs} currentNodeId={s.currentNodeId} readOnly onSelect={(n) => n && setSelId(n)} focusNodeId={s.currentNodeId ?? nodes.find((n) => n.data.kind === "start")?.id} focusZoom={1.25} />
             </ReactFlowProvider>
             <div className="absolute left-[12rem] top-[12rem] inline-flex items-center gap-[6rem] rounded-lg bg-[var(--color-surface-primary)]/95 border border-[var(--color-border-subtle)] px-[10rem] h-[28rem] typo-body-sm text-[var(--color-text-secondary)] shadow-[var(--elevation-01)] pointer-events-none">
-              <IconClick size={14} /> 노드를 클릭하면 우측에서 처리합니다 · 초록 테두리 = 현재 조치
+              <IconClick size={14} /> 노드 클릭 → 우측에서 처리 · 초록 테두리 = 현재 조치 · 완료하면 다음 조치로 자동 이동
             </div>
             {currentNode && s.running && (
               <button onClick={() => setSelId(currentNode.id)} className="absolute right-[12rem] top-[12rem] inline-flex items-center gap-[6rem] rounded-lg bg-[var(--color-surface-success)] text-white px-[10rem] h-[28rem] typo-body-sm font-medium shadow-[var(--elevation-02)] hover:brightness-95">

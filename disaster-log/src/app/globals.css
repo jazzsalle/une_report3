@@ -206,6 +206,84 @@ body {
   stroke-dasharray: 6;
   animation: dashdraw 0.6s linear infinite;
 }
+/* SOP 연결선 — 진행 중(완료→진행) 연결선은 흐르는 대시 + 빛 번짐 */
+.sop-edge-active {
+  stroke-dasharray: 10 8;
+  animation: sop-dash 0.7s linear infinite;
+  filter: drop-shadow(0 0 3px rgba(22, 163, 74, 0.55));
+}
+.sop-edge-glow {
+  filter: blur(4px);
+  animation: sop-glow 1.4s ease-in-out infinite;
+}
+.sop-edge-dot {
+  filter: drop-shadow(0 0 4px rgba(22, 163, 74, 0.7));
+}
+.sop-edge-done {
+  filter: drop-shadow(0 0 1px rgba(25, 135, 84, 0.35));
+}
+@keyframes sop-dash {
+  to {
+    stroke-dashoffset: -36;
+  }
+}
+@keyframes sop-glow {
+  0%,
+  100% {
+    stroke-opacity: 0.12;
+  }
+  50% {
+    stroke-opacity: 0.32;
+  }
+}
+/* SOP 노드 — 현재 조치: 외곽선 깜박임(펄스 링) + 뒤 빛 번짐(블러) */
+.sop-node {
+  position: relative;
+}
+.sop-node-current {
+  animation: sop-ring 1.6s ease-in-out infinite;
+}
+.sop-node-current::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 22px;
+  background: radial-gradient(closest-side, rgba(34, 197, 94, 0.38), rgba(34, 197, 94, 0));
+  filter: blur(10px);
+  z-index: -1;
+  animation: sop-halo 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sop-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.9), 0 0 0 8px rgba(34, 197, 94, 0.18), var(--elevation-03);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.35), 0 0 0 14px rgba(34, 197, 94, 0.06), var(--elevation-03);
+  }
+}
+@keyframes sop-halo {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+/* 완료 노드 — 초록 톤 */
+.sop-node-done {
+  border-color: rgba(25, 135, 84, 0.55) !important;
+  box-shadow: 0 0 0 1px rgba(25, 135, 84, 0.15), var(--elevation-01);
+  background-image: linear-gradient(rgba(25, 135, 84, 0.05), rgba(25, 135, 84, 0.05));
+}
+.react-flow__node.selected .sop-node-current {
+  animation: sop-ring 1.6s ease-in-out infinite;
+}
+
 .react-flow__controls {
   box-shadow: var(--elevation-01);
   border-radius: var(--radius-lg);
