@@ -63,8 +63,8 @@ function Editor() {
   const abortRef = useRef<AbortController | null>(null);
   const isGenerating = llmStatus !== null && llmStatus !== "end";
 
-  const nodes = t?.draft.nodes ?? [];
-  const edges = t?.draft.edges ?? [];
+  const nodes = useMemo(() => t?.draft.nodes ?? [], [t]);
+  const edges = useMemo(() => t?.draft.edges ?? [], [t]);
   const selNode = nodes.find((n) => n.id === selId);
   const dirty = !!t && (!t.published || t.updatedAt > t.published.publishedAt);
 
