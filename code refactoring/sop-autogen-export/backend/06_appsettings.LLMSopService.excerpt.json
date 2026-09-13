@@ -1,0 +1,8 @@
+// [발췌] protectofoundationservice/appsettings.json — LLM 서비스 설정 섹션 (L97~100)
+// ※ BaseUrl = 외부 LLM SOP 생성 서버 (FastAPI 추정, SSE 스트리밍 응답)
+{
+  "LLMSopService": {
+    "BaseUrl": "http://221.147.100.161:8000",
+    "HeaderTimeoutSeconds": 60
+  }
+}

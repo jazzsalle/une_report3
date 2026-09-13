@@ -1,0 +1,400 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 전역 스타일 — UNE 디자인시스템(@une-front/react-ui + design-tokens) 도입
+ *
+ * · 디자인시스템은 1rem = 1px 커스텀 사양(html font-size: 1px)을 사용한다.
+ * · Tailwind v4 기본 테마는 rem 기반이므로 spacing / text / radius / breakpoint /
+ *   container 스케일을 px 값으로 재정의해 두 체계를 충돌 없이 공존시킨다.
+ * · 앱 고유 색상 이름(brand / navy / ink / sub / line / canvas …)은 모두
+ *   디자인시스템 시맨틱 토큰의 별칭으로만 정의한다 (다크모드 자동 대응).
+ * ───────────────────────────────────────────────────────────────────────────── */
+/* 캐스케이드 레이어 순서를 먼저 고정한다. 디자인시스템 CSS(@layer theme/utilities)를
+ * Tailwind 보다 앞에 두어 앱에서 쓰는 variant 유틸리티(md:flex 등)가 DS 의 기본 유틸(.hidden)에
+ * 덮이지 않도록 하고, base(preflight)가 utilities 뒤로 밀리는 문제를 막는다. */
+@layer properties, theme, base, components, utilities;
+@import "@une-front/react-ui/css";
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+@custom-variant dark (&:where(.dark &));
+
+@theme {
+  /* 폰트 — 디자인시스템 기본 서체(Spoqa Han Sans Neo) */
+  --font-sans: var(--font-family-base);
+
+  /* 크기 스케일: 1rem=1px 환경에서도 Tailwind 유틸이 기대값을 내도록 px 로 고정 */
+  --spacing: 4px;
+
+  --text-xs: 12px;
+  --text-xs--line-height: 1.5;
+  --text-sm: 14px;
+  --text-sm--line-height: 1.43;
+  --text-base: 16px;
+  --text-base--line-height: 1.5;
+  --text-lg: 18px;
+  --text-lg--line-height: 1.5;
+  --text-xl: 20px;
+  --text-xl--line-height: 1.6;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 1.5;
+  --text-3xl: 32px;
+  --text-3xl--line-height: 1.5;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 20px;
+  --radius-4xl: 24px;
+
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  --container-xs: 320px;
+  --container-sm: 384px;
+  --container-md: 448px;
+  --container-lg: 512px;
+  --container-xl: 576px;
+  --container-2xl: 672px;
+  --container-3xl: 768px;
+  --container-4xl: 896px;
+  --container-5xl: 1024px;
+  --container-6xl: 1152px;
+  --container-7xl: 1280px;
+
+  /* ── 앱 색상 별칭 → 디자인시스템 시맨틱 토큰 ── */
+  --color-brand: var(--color-surface-brand);
+  --color-brand-50: var(--color-interaction-primary-bg-subtle-default);
+  --color-brand-100: var(--color-interaction-primary-bg-muted-default);
+  --color-brand-text: var(--color-text-brand);
+
+  --color-navy: var(--dark-blue-100);
+  --color-navy-700: var(--dark-blue-150);
+  --color-navy-50: var(--light-blue-20);
+
+  --color-ink: var(--color-text-primary);
+  --color-body: var(--color-text-basic);
+  --color-sub: var(--color-text-tertiary);
+  --color-muted: var(--color-text-muted);
+  --color-line: var(--color-border-subtle);
+  --color-line-strong: var(--color-border-default);
+  --color-canvas: var(--color-bg-subtle);
+  --color-surface: var(--color-surface-primary);
+  --color-surface-2: var(--color-surface-subtle);
+  --color-surface-3: var(--color-surface-muted);
+
+  --color-ok: var(--color-text-success);
+  --color-ok-50: var(--color-surface-success-subtle);
+  --color-ok-solid: var(--color-surface-success);
+  --color-warn: var(--color-text-light-warning);
+  --color-warn-50: var(--color-surface-light-warning-subtle);
+  --color-warn-solid: var(--color-surface-light-warning);
+  --color-orange: var(--color-text-warning);
+  --color-orange-50: var(--color-surface-warning-subtle);
+  --color-danger: var(--color-text-error);
+  --color-danger-50: var(--color-surface-error-subtle);
+  --color-danger-solid: var(--color-surface-error);
+  --color-purple: var(--purple-600);
+  --color-purple-50: var(--purple-25);
+  --color-purple-100: var(--purple-50);
+
+  /* 위기경보 수준 (관심·주의·경계·심각) — 디자인시스템 primitive 팔레트 */
+  --color-lv-blue: var(--light-blue-500);
+  --color-lv-blue-bg: var(--light-blue-25);
+  --color-lv-yellow: var(--yellow-500);
+  --color-lv-yellow-bg: var(--yellow-25);
+  --color-lv-orange: var(--orange-500);
+  --color-lv-orange-bg: var(--orange-25);
+  --color-lv-red: var(--red-500);
+  --color-lv-red-bg: var(--red-25);
+
+  --shadow-card: var(--elevation-01);
+  --shadow-float: var(--elevation-03);
+}
+
+/* 디자인시스템 CSS(@layer theme)가 정의하는 rem 기반 값과의 충돌을 비계층 규칙으로 확정 */
+:root {
+  --spacing: 4px;
+  --text-lg: 18px;
+  --text-lg--line-height: 1.5;
+  color-scheme: light;
+}
+
+/* ── 디자인시스템 사양: 1rem = 1px ── */
+html {
+  font-size: 1px;
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  font-size: 14rem;
+  line-height: 1.43;
+  letter-spacing: var(--letter-spacing-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── 앱 공통 프리미티브 (디자인시스템 토큰 조합) ── */
+.card {
+  background: var(--color-surface-primary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--elevation-01);
+}
+
+.label {
+  font-size: 12rem;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+.step-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ── ReactFlow ── */
+.react-flow {
+  --xy-background-color: var(--color-bg-subtle);
+  --xy-edge-stroke-default: var(--color-border-strong);
+  --xy-edge-stroke-width-default: 1.8;
+  --xy-edge-stroke-selected-default: var(--color-border-brand);
+  --xy-controls-button-background-color-default: var(--color-surface-primary);
+  --xy-controls-button-border-color-default: var(--color-border-subtle);
+  --xy-controls-button-color-default: var(--color-icon-secondary);
+  --xy-minimap-background-color-default: var(--color-surface-primary);
+}
+.react-flow__attribution {
+  display: none;
+}
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  background: var(--color-surface-primary);
+  border: 2px solid var(--color-border-strong);
+}
+.react-flow__handle:hover {
+  border-color: var(--color-border-brand);
+}
+.react-flow__node.selected .sop-node {
+  box-shadow: var(--selected-shadow), var(--elevation-03);
+  border-color: var(--color-border-brand);
+}
+.react-flow__edge-path {
+  stroke-linecap: round;
+}
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 6;
+  animation: dashdraw 0.6s linear infinite;
+}
+.react-flow__controls {
+  box-shadow: var(--elevation-01);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.react-flow__minimap {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-01);
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.pulse-soft {
+  animation: pulse-soft 1.4s ease-in-out infinite;
+}
+@keyframes dot-blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.dot-blink span {
+  animation: dot-blink 1.4s infinite ease-in-out;
+}
+.dot-blink span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dot-blink span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* ── 문서 본문 / 인쇄 ── */
+.prose-doc {
+  font-size: 13.5rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  color: var(--color-text-basic);
+}
+.prose-doc h2 {
+  font-size: 15rem;
+  font-weight: 700;
+  margin: 18px 0 6px;
+  padding-left: 10px;
+  border-left: 4px solid var(--color-surface-brand);
+  color: var(--color-text-primary);
+}
+.print-only {
+  display: none;
+}
+@media print {
+  html {
+    font-size: 1px;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-area {
+    box-shadow: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+  }
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+}
+
+/* ── Markdown 본문 렌더 (react-markdown) ── */
+.md-body {
+  font-size: 13.5rem;
+  line-height: 1.75;
+  color: var(--color-text-basic);
+  word-break: keep-all;
+}
+.md-body > :first-child {
+  margin-top: 0;
+}
+.md-body h1,
+.md-body h2 {
+  font-size: 15rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 18px 0 8px;
+  padding-left: 10px;
+  border-left: 4px solid var(--color-surface-brand);
+}
+.md-body h3 {
+  font-size: 14rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 14px 0 6px;
+}
+.md-body h4,
+.md-body h5,
+.md-body h6 {
+  font-size: 13.5rem;
+  font-weight: 700;
+  margin: 10px 0 4px;
+}
+.md-body p {
+  margin: 4px 0 8px;
+}
+.md-body ul,
+.md-body ol {
+  margin: 4px 0 8px;
+  padding-left: 22px;
+}
+.md-body ul {
+  list-style: disc;
+}
+.md-body ol {
+  list-style: decimal;
+}
+.md-body li {
+  margin: 2px 0;
+}
+.md-body li > ul,
+.md-body li > ol {
+  margin: 2px 0;
+}
+.md-body strong {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.md-body blockquote {
+  margin: 8px 0;
+  padding: 6px 12px;
+  border-left: 3px solid var(--color-border-strong);
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+.md-body hr {
+  border: 0;
+  border-top: 1px solid var(--color-border-subtle);
+  margin: 12px 0;
+}
+.md-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 12px;
+  font-size: 12.5rem;
+}
+.md-body th,
+.md-body td {
+  border: 1px solid var(--color-border-default);
+  padding: 5px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.md-body th {
+  background: var(--color-surface-subtle);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.md-body code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12rem;
+  background: var(--color-surface-muted);
+  padding: 1px 4px;
+  border-radius: var(--radius-xs);
+}
+@media print {
+  .md-body {
+    color: #000;
+  }
+}
+
+/* 디자인시스템 Checkbox/Switch/Radio 의 sr-only input(absolute)이 스크롤 컨테이너 밖으로
+ * 빠져 문서 높이를 늘리는 현상 방지 — 라벨을 포지셔닝 컨텍스트로 고정 */
+label:has(> input.sr-only) {
+  position: relative;
+}

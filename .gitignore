@@ -1,0 +1,18 @@
+# 앱 빌드/의존성
+disaster-log/node_modules/
+disaster-log/.next/
+disaster-log/out/
+disaster-log/*.tsbuildinfo
+disaster-log/next-env.d.ts
+disaster-log/.env*
+!disaster-log/.env.example
+
+# 사내 디자인시스템 소스 사본(별도 저장소) 및 압축본 — npm 패키지로 설치해 사용
+unesvc_designsystem_26_fe-master/
+unesvc_designsystem_26_fe-master.zip
+
+# 매뉴얼 원본 PDF — 공무원 개인 연락처 포함, 공개 저장소에 올리지 않음
+plan/*.pdf
+
+.DS_Store
+Thumbs.db

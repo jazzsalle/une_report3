@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>재난대응·복구 업무흐름도 v1.0</title>
+<style>
+:root{
+  --bg:#f5f7fa;--card:#fff;--ink:#172033;--sub:#677285;--line:#dbe2ea;
+  --navy:#163a67;--blue:#2f6feb;--blue2:#edf3ff;--green:#198754;--green2:#edf8f2;
+  --amber:#a66d12;--amber2:#fff7e7;--purple:#7057d7;--purple2:#f2efff;
+  --red:#c3473c;--red2:#fff0ef;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif;color:var(--ink)}
+.wrap{max-width:1560px;margin:auto;padding:22px}
+.hero{background:linear-gradient(135deg,#153961,#2b6399);border-radius:20px;padding:24px 28px;color:white;box-shadow:0 15px 38px rgba(34,70,112,.16)}
+.hero h1{margin:0 0 8px;font-size:29px}
+.hero p{margin:0;color:#e9eff7;font-size:14px;line-height:1.58}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+.badge{font-size:11px;font-weight:800;border:1px solid rgba(255,255,255,.3);padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.1)}
+.panel{margin-top:15px;background:white;border:1px solid var(--line);border-radius:18px;padding:19px;box-shadow:0 7px 22px rgba(30,42,60,.045)}
+.panel h2{font-size:18px;margin:0 0 13px}
+.overview{display:grid;grid-template-columns:repeat(8,1fr);gap:9px}
+.ov{position:relative;border:1px solid var(--line);border-radius:13px;background:#fff;padding:13px;min-height:132px}
+.ov:not(:last-child):after{content:"→";position:absolute;right:-14px;top:50%;transform:translateY(-50%);font-weight:900;color:#9ba7b4;z-index:5}
+.ov .n{font-size:10px;font-weight:900;color:var(--blue)}
+.ov b{display:block;font-size:13px;margin:6px 0}
+.ov span{font-size:10.5px;color:var(--sub);line-height:1.45}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+.lg{padding:5px 8px;border-radius:8px;font-size:10px;font-weight:800}
+.user{background:#f1f4f8;color:#536174}.une{background:var(--blue2);color:#2857a6}.t3q{background:var(--purple2);color:var(--purple)}.ext{background:var(--amber2);color:var(--amber)}.data{background:var(--green2);color:var(--green)}
+.flowblock{border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:12px}
+.block-title{padding:11px 14px;background:#f7f9fc;border-bottom:1px solid var(--line);font-size:13px;font-weight:900}
+.lane-row{display:grid;grid-template-columns:115px 1fr;border-bottom:1px solid var(--line)}
+.lane-row:last-child{border-bottom:0}
+.lane-name{background:#fafbfc;padding:12px;font-size:11px;font-weight:900;border-right:1px solid var(--line)}
+.lane-body{padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.node{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;font-size:10.5px;line-height:1.35;min-width:118px}
+.node strong{display:block;font-size:11px;margin-bottom:2px}
+.node.usern{background:#f6f8fa}.node.unen{background:#f3f7ff;border-color:#cfe0ff}.node.t3qn{background:#f8f5ff;border-color:#dfd6ff}.node.extn{background:#fffaf0;border-color:#eeddb4}.node.datan{background:#f1f9f5;border-color:#ccead9}
+.arrow{font-size:16px;font-weight:900;color:#9da8b4}
+.decision{width:92px;height:92px;transform:rotate(45deg);border:1px solid #e0c77f;background:#fff8e5;display:flex;align-items:center;justify-content:center;margin:7px 20px}
+.decision span{transform:rotate(-45deg);font-size:10px;font-weight:900;text-align:center;line-height:1.25}
+.branch{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.branch .yes,.branch .no{font-size:9px;font-weight:900;padding:4px 6px;border-radius:6px}
+.yes{background:var(--green2);color:var(--green)}.no{background:var(--red2);color:var(--red)}
+.subgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.box{border:1px solid var(--line);border-radius:13px;padding:13px}
+.box h4{margin:0 0 7px;font-size:12px}
+.box p,.box li{font-size:10.5px;color:var(--sub);line-height:1.5}
+.box ul{margin:7px 0 0 17px;padding:0}
+.rules{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.rule{border:1px solid var(--line);border-radius:13px;padding:13px}
+.rule b{font-size:12px;display:block;margin-bottom:6px}
+.rule span{font-size:10.5px;color:var(--sub);line-height:1.48}
+.footer{font-size:10.5px;color:#7c8796;margin:13px 2px}
+@media(max-width:1180px){.overview{grid-template-columns:repeat(2,1fr)}.ov:not(:last-child):after{display:none}.subgrid,.rules{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){.wrap{padding:10px}.overview,.subgrid,.rules{grid-template-columns:1fr}.lane-row{grid-template-columns:1fr}.lane-name{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>재난대응·복구 업무흐름도 v1.0</h1>
+    <p>기존 UNE 디지털 SOP 자동생성·편집·실행 모듈을 재사용하고, 실제재난과 안전한국훈련을 하나의 공통 Core로 처리하는 상세 업무흐름입니다. 실제재난은 재난상황 등록에서, 안전한국훈련은 훈련계획·시나리오와 상황부여에서 시작하며 이후 문서선택·SOP 구성·실행·상황일지·결과보고 흐름을 공통으로 사용합니다.</p>
+    <div class="badges">
+      <span class="badge">상세 순서도형</span>
+      <span class="badge">문서 선택 → 조치 전체 상세 수신 → 조치 선택 → UNE 기본 Flow 구성</span>
+      <span class="badge">UNE 기존 SOP 모듈 재사용</span>
+      <span class="badge">SMS 실제 발송</span>
+      <span class="badge">KRMS 연계 자리 확보</span>
+      <span class="badge">안전한국훈련 모드 포함</span><span class="badge">부산 풍수해 = 1차 Seed</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>1. 전체 업무흐름 — 사용자 관점</h2>
+    <div class="overview">
+      <div class="ov"><div class="n">01</div><b>업무 시작</b><span>실제재난: 재난상황 등록<br>안전한국훈련: 훈련계획·시나리오/상황부여</span></div>
+      <div class="ov"><div class="n">02</div><b>상황정보 확인</b><span>UNE 기상특보 열람<br>T3Q 기상 MCP 요약</span></div>
+      <div class="ov"><div class="n">03</div><b>관련 문서 조회</b><span>T3Q가 파일명 목록 추천<br>사용자가 적용 문서 선택</span></div>
+      <div class="ov"><div class="n">04</div><b>대응조치 전체 수신</b><span>선택 문서를 기준으로<br>T3Q가 조치목록+상세정보를 한 번에 반환</span></div>
+      <div class="ov"><div class="n">05</div><b>조치 선택·순서확정</b><span>사용자가 필요한 조치를 체크하고<br>필요 시 순서를 조정</span></div>
+      <div class="ov"><div class="n">06</div><b>UNE SOP 구성·실행</b><span>선택 순서대로 기본 Flow 자동구성<br>상황판단·분기는 사용자 편집 후 실행</span></div>
+      <div class="ov"><div class="n">07</div><b>상황일지</b><span>실행이력·SMS·자원·조치결과를 시간순 자동 누적</span></div>
+      <div class="ov"><div class="n">08</div><b>결과보고</b><span>목차/반영자료 선택<br>조치결과 중심 보고서 생성</span></div>
+    </div>
+    <div class="legend">
+      <span class="lg user">사용자</span><span class="lg une">UNE</span><span class="lg t3q">T3Q</span><span class="lg ext">외부연계</span><span class="lg data">저장·이력</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>2. 상세 순서도 — A. 실제재난 / 안전한국훈련 시작 및 Context 구성</h2>
+    <div class="flowblock">
+      <div class="block-title">A-1. 공통 시작점에서 실제재난과 안전한국훈련을 분기</div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body">
+        <div class="node usern"><strong>새 업무 시작</strong>실제재난 / 안전한국훈련 선택</div><span class="arrow">→</span>
+        <div class="decision"><span>업무 유형?</span></div>
+        <div class="branch"><span class="yes">실제재난</span><div class="node usern">지자체·재난유형·기준시각·발생/영향지역 입력 + 현재상황 입력(선택)</div></div>
+        <div class="branch"><span class="no">안전한국훈련</span><div class="node usern">훈련계획/훈련시나리오 선택 또는 입력 + 대상지역·재난유형·참여기관 설정</div></div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>업무 세션 생성</strong>situation_id / mode(실제·훈련) / 사용자 / 생성시각</div><span class="arrow">→</span>
+        <div class="node unen"><strong>Context 구성</strong>공통 Context + 실제/훈련 전용 Context</div>
+      </div></div>
+    </div>
+
+    <div class="flowblock">
+      <div class="block-title">A-2. 실제재난 모드</div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>기상특보 조회</strong>공식 API 결과를 열람용으로 표시</div><span class="arrow">→</span>
+        <div class="node unen"><strong>Query Context</strong>지자체 + 재난유형 + 발생/영향지역 + 현재상황(선택)</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">T3Q / 외부</div><div class="lane-body">
+        <div class="node t3qn"><strong>T3Q 기상 MCP</strong>선택 지자체의 기상상황 요약 반환</div><span class="arrow">+</span>
+        <div class="node extn"><strong>기상특보 API</strong>공식 발표정보 제공(UNE 열람)</div>
+      </div></div>
+    </div>
+
+    <div class="flowblock">
+      <div class="block-title">A-3. 안전한국훈련 모드</div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body">
+        <div class="node usern"><strong>훈련계획/시나리오 설정</strong>훈련 목적·재난유형·대상지역·참여기관·일정 등</div><span class="arrow">→</span>
+        <div class="node usern"><strong>상황부여 등록</strong>훈련 진행 중 상황메시지/상황부여를 시간순 등록</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>훈련 Context 구성</strong>훈련계획 + 시나리오 + 현재 상황부여 + 대상지역/재난유형</div><span class="arrow">→</span>
+        <div class="node unen"><strong>훈련 이벤트 원장</strong>상황부여를 훈련의 사실 이벤트로 시간순 누적</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">T3Q</div><div class="lane-body">
+        <div class="node t3qn"><strong>훈련자료 RAG 활용</strong>안전한국훈련 가이드·시나리오·상황메시지 및 위기관리 매뉴얼 기반 문서/조치 추천</div>
+      </div></div>
+    </div>
+
+    <div class="flowblock">
+      <div class="block-title">A-4. 이후 공통 흐름으로 합류</div>
+      <div class="lane-row"><div class="lane-name">공통</div><div class="lane-body">
+        <div class="node datan">실제재난 Context 또는 안전한국훈련 Context 확정</div><span class="arrow">→</span>
+        <div class="node unen"><strong>관련 문서 조회 단계로 이동</strong>문서 선택 → 조치 전체 상세 수신 → 조치 선택/정렬 → UNE SOP 구성</div>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>3. 상세 순서도 — B. 문서 선택 → 조치 전체 상세 수신 → 조치 선택 → UNE SOP 구성</h2>
+
+    <div class="flowblock">
+      <div class="block-title">B-1. T3Q가 관련 문서 파일명 목록을 먼저 제공</div>
+      <div class="lane-row">
+        <div class="lane-name">사용자</div>
+        <div class="lane-body">
+          <div class="node usern"><strong>관련 문서 조회</strong>현재 상황에 적용 가능한 문서 검색 요청</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">UNE</div>
+        <div class="lane-body">
+          <div class="node unen"><strong>문서조회 요청</strong>상황 Context 전달</div><span class="arrow">→</span>
+          <div class="node unen"><strong>T3Q 문서조회 API 호출</strong></div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">T3Q</div>
+        <div class="lane-body">
+          <div class="node t3qn"><strong>관련 문서 검색</strong>매뉴얼/지침/복구문서 검색</div><span class="arrow">→</span>
+          <div class="node t3qn"><strong>파일명 목록 반환</strong>UI에는 파일명만 표시</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">사용자</div>
+        <div class="lane-body">
+          <div class="node usern"><strong>문서 선택</strong>체크박스로 적용 문서 선택</div><span class="arrow">→</span>
+          <div class="node usern"><strong>선택 문서로 SOP 추천 조회</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flowblock">
+      <div class="block-title">B-2. 선택 문서 기준으로 T3Q가 “조치 목록 + 상세정보”를 한 번에 반환</div>
+      <div class="lane-row">
+        <div class="lane-name">UNE</div>
+        <div class="lane-body">
+          <div class="node unen"><strong>SOP 추천 요청 조립</strong>선택 문서 + 상황 Context</div><span class="arrow">→</span>
+          <div class="node unen"><strong>T3Q SOP 추천 API 호출</strong>조치별 상세정보까지 한 번에 요청</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">T3Q</div>
+        <div class="lane-body">
+          <div class="node t3qn"><strong>선택 문서 내용 검색·정리</strong>문서에 근거한 대응조치와 세부내용 구조화</div><span class="arrow">→</span>
+          <div class="node t3qn"><strong>조치 전체 상세 반환</strong>조치코드/조치명/대응단계/담당·지원·협업기관/세부행동/전파대상/필요자원</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">제외 항목</div>
+        <div class="lane-body">
+          <div class="node extn"><strong>T3Q에 요구하지 않음</strong>필수/선택 여부 · 선행/후행 관계 · 분기조건 · 다음조치 관계 · UI 좌표</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">UNE</div>
+        <div class="lane-body">
+          <div class="node unen"><strong>응답 전체 임시보관</strong>조치목록과 노드 상세 자동입력용 데이터를 함께 저장</div><span class="arrow">→</span>
+          <div class="node unen"><strong>조치 목록 표시</strong>사용자 화면에는 필요한 요약항목만 표시</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">사용자</div>
+        <div class="lane-body">
+          <div class="node usern"><strong>조치 선택</strong>필요한 대응조치 체크/해제</div><span class="arrow">→</span>
+          <div class="node usern"><strong>순서 확인·조정</strong>필요 시 드래그 등으로 기본 실행순서 조정</div><span class="arrow">→</span>
+          <div class="node usern"><strong>선택 조치로 SOP 구성</strong>T3Q 재호출 없이 UNE 내부 처리</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flowblock">
+      <div class="block-title">B-3. UNE 기존 SOP 모듈이 선택된 조치만 기본 Flow로 구성</div>
+      <div class="lane-row">
+        <div class="lane-name">UNE 기존 SOP 모듈</div>
+        <div class="lane-body">
+          <div class="node unen"><strong>SOP Autogen Adapter</strong>T3Q 조치 상세 → 기존 SOP Component 구조 변환</div><span class="arrow">→</span>
+          <div class="node unen"><strong>기본 노드 생성</strong>선택 조치를 기본 Process 노드로 생성</div><span class="arrow">→</span>
+          <div class="node unen"><strong>기본 순차 연결</strong>사용자 선택/정렬 순서대로 연결</div><span class="arrow">→</span>
+          <div class="node unen"><strong>노드 상세 자동입력</strong>담당부서·세부행동·전파대상·필요자원</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">사용자</div>
+        <div class="lane-body">
+          <div class="node usern"><strong>Flow 편집</strong>판단노드·분기·연결선이 필요한 경우 기존 편집기에서 수동 추가/수정</div><span class="arrow">→</span>
+          <div class="node usern"><strong>노드 상세 확인·수정</strong>자동입력값을 확인하고 필요한 항목만 보완</div><span class="arrow">→</span>
+          <div class="node datan"><strong>SOP 실행본 확정</strong>확정본 저장 후 실행단계로 이동</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subgrid">
+      <div class="box">
+        <h4>T3Q가 제공하는 최소 정보</h4>
+        <ul>
+          <li>조치코드/조치명/대응단계</li>
+          <li>담당부서·지원부서·협업기관</li>
+          <li>세부행동</li>
+          <li>전파대상·필요자원</li>
+          <li></li>
+        </ul>
+      </div>
+      <div class="box">
+        <h4>UNE가 담당하는 Flow 구성</h4>
+        <ul>
+          <li>선택된 조치를 노드로 변환</li>
+          <li>사용자가 정한 순서대로 기본 순차 연결</li>
+          <li>노드 상세 자동입력 및 수정</li>
+          <li>상황판단 노드·분기조건·분기값별 연결대상은 사용자 편집</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+<section class="panel">
+    <h2>4. 상세 순서도 — C. SOP 실행·조치결과 입력·모니터링</h2>
+    <div class="flowblock">
+      <div class="block-title">C-1. 실제재난과 안전한국훈련 모두 “기준 SOP ↔ 실제 수행”을 비교하고, 조치결과를 누적</div>
+      <div class="lane-row">
+        <div class="lane-name">UNE</div>
+        <div class="lane-body">
+          <div class="node unen"><strong>SOP 실행 시작</strong>ActionStepHistory / ComponentHistory 생성</div><span class="arrow">→</span>
+          <div class="node unen"><strong>현재 노드 강조</strong>Flowchart + 실제 실행 타임라인 동시표출</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">사용자</div>
+        <div class="lane-body">
+          <div class="decision"><span>노드 유형?</span></div>
+          <div class="node usern"><strong>프로세스</strong>임무 시작/진행/완료 + 현장메모 + 조치결과 + 증빙</div>
+          <div class="node usern"><strong>상황판단</strong>Yes/No 또는 정의된 분기값 선택</div>
+          <div class="node usern"><strong>상황전파</strong>수신자·문안 확인 → SMS 발송</div>
+          <div class="node usern"><strong>자원</strong>수기/내부목록 선택, 향후 KRMS 조회자리</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">외부</div>
+        <div class="lane-body">
+          <div class="node extn"><strong>UNE SMS 모듈</strong>실제 발송 → 성공/실패/발송시각 반환</div><span class="arrow">·</span>
+          <div class="node extn"><strong>KRMS (향후)</strong>지역·분류·가용상태 조회 → 자원 선택</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">UNE 이력</div>
+        <div class="lane-body">
+          <div class="node datan">단계/컴포넌트 실행상태·시작/완료시각</div><span class="arrow">+</span>
+          <div class="node datan">판단 분기값·실제 경로</div><span class="arrow">+</span>
+          <div class="node datan">SMS 발송이력</div><span class="arrow">+</span>
+          <div class="node datan">자원 투입·회수</div><span class="arrow">+</span>
+          <div class="node datan">현장메모·조치결과·첨부자료</div><span class="arrow">+</span><div class="node datan">훈련 시 상황부여·임무수신/완료 이력</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">분기/반복</div>
+        <div class="lane-body">
+          <div class="decision"><span>상황 변화?</span></div>
+          <div class="branch"><span class="yes">YES</span><div class="node unen">필요 시 관련 문서 재조회 → T3Q 조치 전체 상세 재수신 → 사용자 선택 → UNE 추가 SOP 구성</div></div>
+          <div class="branch"><span class="no">NO</span><div class="node unen">다음 SOP 노드 계속 실행</div></div>
+          <span class="arrow">→</span>
+          <div class="decision"><span>대응 종료?</span></div>
+          <div class="branch"><span class="no">NO</span><div class="node unen">실행 루프 지속</div></div>
+          <div class="branch"><span class="yes">YES</span><div class="node unen">수습·복구 단계 판단</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>5. 상세 순서도 — D. 수습·복구 → 상황일지 → 결과보고</h2>
+    <div class="flowblock">
+      <div class="block-title">D-1. 복구도 동일한 “문서 선택 → 조치 선택 → 추가 SOP 생성” 구조 활용</div>
+      <div class="lane-row">
+        <div class="lane-name">사용자 / UNE</div>
+        <div class="lane-body">
+          <div class="decision"><span>복구 SOP 필요?</span></div>
+          <div class="branch"><span class="yes">YES</span><div class="node unen">현재 피해·조치상황을 Context로 복구 관련 문서 파일명 목록 요청</div></div>
+          <div class="branch"><span class="no">NO</span><div class="node unen">기존 SOP 실행이력 정리</div></div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">T3Q → UNE</div>
+        <div class="lane-body">
+          <div class="node t3qn">복구 관련 문서 파일명 목록</div><span class="arrow">→</span>
+          <div class="node usern">문서 선택</div><span class="arrow">→</span>
+          <div class="node t3qn">복구 조치 목록 + 상세정보 일괄 반환</div><span class="arrow">→</span>
+          <div class="node usern">조치 선택·순서확정</div><span class="arrow">→</span>
+          <div class="node unen">UNE가 기본 복구 SOP Flowchart 추가/별도 생성</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">상황일지</div>
+        <div class="lane-body">
+          <div class="node unen"><strong>상황 이벤트 원장 구성</strong>SOP 실행이력 + SMS + 자원 + 기상요약 + 조치결과 + 훈련상황부여(훈련 시)</div><span class="arrow">→</span>
+          <div class="node t3qn"><strong>상황일지 문안 생성</strong>확인된 이력만 이용</div><span class="arrow">→</span>
+          <div class="node usern"><strong>사용자 검토·수정</strong>미확인정보는 확인 필요 유지</div>
+        </div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">결과보고</div>
+        <div class="lane-body">
+          <div class="node usern"><strong>목차 선택/직접입력</strong>실제재난 결과보고 또는 안전한국훈련 결과보고 유형 및 목차 구성</div><span class="arrow">→</span>
+          <div class="node usern"><strong>반영자료 체크</strong>SOP·SMS·자원·기상·사진·피해·복구</div><span class="arrow">→</span>
+          <div class="node t3qn"><strong>본문 초안</strong>선택자료 기반 T3Q 생성</div><span class="arrow">→</span>
+          <div class="node unen"><strong>문서 조립·편집·출력</strong>UNE 템플릿 / HWPX·DOCX·PDF</div>
+        </div>
+      </div>
+    </div>
+    <div class="subgrid">
+      <div class="box"><h4>조치결과 활용 원칙</h4><ul><li>SOP 상세에서 조치결과를 별도 입력</li><li>현장메모와 조치결과는 구분 저장</li><li>피해·복구 보고서는 조치결과를 우선 사용</li><li>상황일지와 결과보고 모두 조치결과를 핵심 원천으로 활용</li></ul></div>
+      <div class="box"><h4>결과보고 자료 수집 방식</h4><ul><li>기상상황: 공식 특보 + T3Q 기상요약</li><li>대응조치: 단계별 조치결과</li><li>상황전파: SMS 발송이력</li><li>자원: 수기/내부/향후 KRMS</li></ul></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>6. 업무흐름도 작성 원칙</h2>
+    <div class="rules">
+      <div class="rule"><b>① 문서는 상세하게</b><span>개발·UIUX·기관협의 기준이므로 문서조회, 조치조회, SOP생성의 분리된 단계와 데이터 생성지점을 표시한다.</span></div>
+      <div class="rule"><b>② 실제 화면은 단순하게</b><span>문서 선택 화면은 파일명만 표시하고, 조치 선택 화면도 체크 위주로 구성한다.</span></div>
+      <div class="rule"><b>③ UI 구현과 AI 역할 분리</b><span>T3Q는 문서와 조치별 상세정보까지 제공하고, 조치 간 관계·분기·필수성은 요구하지 않는다. UNE가 선택 순서 기반 기본 Flow와 실행·이력을 담당.</span></div>
+      <div class="rule"><b>④ 실제재난/훈련 공통 Core</b><span>안전한국훈련은 별도 시스템이 아니라 시작 Context와 상황부여 방식만 달리하고, SOP 생성·실행·상황일지·결과보고 Core는 공통으로 사용한다.</span></div>
+    </div>
+  </section>
+
+  <div class="footer">v1.0 · T3Q는 조치 상세까지만 제공하고, UNE는 기본 순차 Flow를 구성하며 상황판단 노드·분기조건·분기별 연결대상은 사용자가 편집하도록 역할을 확정. SOP 노드 설정의 근거문서 표시는 제외.</div>
+</div>
+</body>
+</html>
