@@ -32,12 +32,20 @@ export interface AiContext {
   templateName?: string;
 }
 
+/** 서버(Vercel=UTC)·브라우저 어디서 실행되든 한국 시간(Asia/Seoul)으로 표기 */
+const KST = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+export function kstParts(dt: string) {
+  const d = new Date(dt);
+  if (Number.isNaN(d.getTime())) return null;
+  const o: Record<string, string> = {};
+  for (const p of KST.formatToParts(d)) if (p.type !== "literal") o[p.type] = p.value;
+  return { y: o.year, m: o.month, d: o.day, h: o.hour === "24" ? "00" : o.hour, mi: o.minute };
+}
 export function fmt(dt?: string) {
   if (!dt) return "";
-  const d = new Date(dt);
-  if (Number.isNaN(d.getTime())) return dt;
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  const p = kstParts(dt);
+  if (!p) return dt;
+  return `${p.y}.${p.m}.${p.d} ${p.h}:${p.mi}`;
 }
 
 export function buildContext(s: Situation, opts: { includes?: string[]; sections?: string[]; templateName?: string; eventFilter?: (e: LedgerEvent) => boolean } = {}): AiContext {

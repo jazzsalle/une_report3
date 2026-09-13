@@ -3,7 +3,7 @@
 //  AI 초안과 동일한 형식으로 생성하되 출처를 'fallback' 으로 표시한다.
 // ─────────────────────────────────────────────────────────────────────────────
 import type { AiContext } from "./prompts";
-import { fmt } from "./prompts";
+import { fmt, kstParts } from "./prompts";
 
 const TYPE_LABEL: Record<string, string> = {
   situation: "상황",
@@ -24,9 +24,8 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 function hm(dt: string) {
-  const d = new Date(dt);
-  if (Number.isNaN(d.getTime())) return "--:--";
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const p = kstParts(dt);
+  return p ? `${p.h}:${p.mi}` : "--:--";
 }
 
 function mark(v: string) {
@@ -41,10 +40,11 @@ export function fallbackLog(ctx: AiContext): string {
   const sorted = [...ctx.events].sort((a, b) => a.at.localeCompare(b.at));
   let lastDay = "";
   for (const e of sorted) {
-    const day = e.at.slice(0, 10);
+    const kp = kstParts(e.at);
+    const day = kp ? `${kp.y}.${kp.m}.${kp.d}` : e.at.slice(0, 10);
     if (day !== lastDay) {
       if (lines.length > 2) lines.push("");
-      lines.push(`### ${day.replace(/-/g, ".")}`);
+      lines.push(`### ${day}`);
       lines.push("");
       lastDay = day;
     }
