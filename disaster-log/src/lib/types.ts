@@ -214,6 +214,8 @@ export interface NodeRun {
   attachments?: { name: string; size: number }[];
   /** 훈련 임무 수신·확인·완료 (UFR-005-009) */
   missionAck?: { received?: string; confirmed?: string; completed?: string; by?: string };
+  /** 세부행동 체크 (index → 체크 시각 ISO). 체크된 항목은 조치 수행 기록으로 원장에 남는다 */
+  checks?: Record<string, string>;
 }
 
 export interface SmsRecord {
@@ -349,3 +351,17 @@ export interface Situation {
   log: SituationLog;
   report: Report;
 }
+
+// ── 조직·연락처 (상황전파 수신대상 · 설정 > 조직관리) ─────────────────────────
+export interface Contact {
+  id: string;
+  dept: string; // 부서명
+  position: string; // 직위
+  name: string; // 이름
+  phone: string; // 전화번호
+  email?: string; // 이메일
+  note?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+export type ContactInput = Omit<Contact, "id" | "createdAt" | "updatedAt">;

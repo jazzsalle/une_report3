@@ -12,6 +12,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { Button, Dots, Modal, TextArea, TextInput, useToast } from "@/components/ui";
 import { IconAi, IconArrowLeft, IconCheckCircle, IconClock, IconCopy, IconDownload, IconInfo, IconList, IconNodeDecision, IconNodeProcess, IconAnnounce, IconStorage, IconStop, IconTrash, IconPlay, IconEdit } from "@/components/icons";
 import { SopCanvas } from "@/components/sop/SopCanvas";
+import { SidePanel, SidePanelOpener, useSidePanel } from "@/components/sop/SidePanel";
 import { NodePanel, AiModal, STATUS_LABEL, KIND_LABEL } from "@/components/situation/SopTab";
 import { ActionPickerModal } from "@/components/sop/ActionPickerModal";
 import { streamSopGeneration, type StreamMeta } from "@/lib/ai/stream";
@@ -51,6 +52,7 @@ function Editor() {
   const [pickOpen, setPickOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(sp.get("ai") === "1");
   const [side, setSide] = useState<"node" | "history">("node");
+  const panel = useSidePanel();
 
   // AI 생성 상태
   const [query, setQuery] = useState("");
@@ -170,9 +172,10 @@ function Editor() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_360px]">
-        <div className="relative min-h-[420px]">
+      <div className="flex-1 min-h-0 flex">
+        <div className="relative min-h-[420px] flex-1 min-w-0">
           <SopCanvas nodes={nodes} edges={edges} readOnly={isGenerating} onChange={onCanvasChange} onSelect={(n, e) => { setSelId(n); setSelEdge(e); if (n) setSide("node"); }} fitKey={fitKey} />
+          <SidePanelOpener hidden={panel.hidden} onToggle={() => panel.toggle()} />
           {isGenerating && (
             <div className="absolute left-[16rem] top-[16rem] flex items-center gap-[8rem] bg-[var(--color-surface-primary)] border border-[var(--color-border-subtle)] rounded-xl px-[12rem] py-[8rem] shadow-[var(--elevation-03)]">
               <IconAi size={16} className="text-[var(--color-icon-brand)] pulse-soft" />
@@ -181,12 +184,13 @@ function Editor() {
             </div>
           )}
         </div>
-        <aside className="border-l border-[var(--color-border-subtle)] bg-[var(--color-surface-primary)] overflow-y-auto">
-          <div className="flex border-b border-[var(--color-border-subtle)]">
+        <SidePanel width={panel.width} onWidth={panel.setWidth} hidden={panel.hidden} onToggle={() => panel.toggle()} header={
+          <div className="flex gap-[2rem]">
             {(["node", "history"] as const).map((k) => (
-              <button key={k} onClick={() => setSide(k)} className={cn("flex-1 h-[40rem] typo-body-md font-medium border-b-2", side === k ? "border-[var(--color-border-brand)] text-[var(--color-text-brand)]" : "border-transparent text-[var(--color-text-tertiary)]")}>{k === "node" ? "노드 상세" : "게시·배포 이력"}</button>
+              <button key={k} onClick={() => setSide(k)} className={cn("h-[28rem] px-[10rem] rounded-md typo-body-sm font-medium", side === k ? "bg-[var(--color-surface-brand-subtle)] text-[var(--color-text-brand)]" : "text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-subtle)]")}>{k === "node" ? "노드 상세" : "게시·배포 이력"}</button>
             ))}
           </div>
+        }>
           {side === "node" ? (
             selNode ? (
               <NodePanel node={selNode} edges={edges} nodes={nodes} onPatch={(fn) => patchNode(selNode.id, fn)} onPatchEdge={patchEdge} readOnly={isGenerating} />
@@ -221,7 +225,7 @@ function Editor() {
               </div>
             </div>
           )}
-        </aside>
+        </SidePanel>
       </div>
 
       <AiModal open={aiOpen} onClose={() => setAiOpen(false)} query={query} setQuery={setQuery} submitted={submitted} status={llmStatus} preview={preview} meta={aiMeta} isGenerating={isGenerating} onGenerate={handleGenerate} onStop={handleStop} />

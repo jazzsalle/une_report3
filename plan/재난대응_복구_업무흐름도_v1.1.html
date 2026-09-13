@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>재난대응·복구 업무흐름도 v1.0</title>
+<title>재난대응·복구 업무흐름도 v1.1</title>
 <style>
 :root{
   --bg:#f5f7fa;--card:#fff;--ink:#172033;--sub:#677285;--line:#dbe2ea;
@@ -62,7 +62,7 @@ body{margin:0;background:var(--bg);font-family:"Pretendard","Noto Sans KR","Appl
 <body>
 <div class="wrap">
   <section class="hero">
-    <h1>재난대응·복구 업무흐름도 v1.0</h1>
+    <h1>재난대응·복구 업무흐름도 v1.1</h1>
     <p>기존 UNE 디지털 SOP 자동생성·편집·실행 모듈을 재사용하고, 실제재난과 안전한국훈련을 하나의 공통 Core로 처리하는 상세 업무흐름입니다. 실제재난은 재난상황 등록에서, 안전한국훈련은 훈련계획·시나리오와 상황부여에서 시작하며 이후 문서선택·SOP 구성·실행·상황일지·결과보고 흐름을 공통으로 사용합니다.</p>
     <div class="badges">
       <span class="badge">상세 순서도형</span>
@@ -82,9 +82,9 @@ body{margin:0;background:var(--bg);font-family:"Pretendard","Noto Sans KR","Appl
       <div class="ov"><div class="n">03</div><b>관련 문서 조회</b><span>T3Q가 파일명 목록 추천<br>사용자가 적용 문서 선택</span></div>
       <div class="ov"><div class="n">04</div><b>대응조치 전체 수신</b><span>선택 문서를 기준으로<br>T3Q가 조치목록+상세정보를 한 번에 반환</span></div>
       <div class="ov"><div class="n">05</div><b>조치 선택·순서확정</b><span>사용자가 필요한 조치를 체크하고<br>필요 시 순서를 조정</span></div>
-      <div class="ov"><div class="n">06</div><b>UNE SOP 구성·실행</b><span>선택 순서대로 기본 Flow 자동구성<br>상황판단·분기는 사용자 편집 후 실행</span></div>
+      <div class="ov"><div class="n">06</div><b>UNE SOP 구성·실행</b><span>선택 순서대로 기본 Flow 자동구성<br>상황판단 노드·분기조건·연결대상은 사용자 편집 후 실행</span></div>
       <div class="ov"><div class="n">07</div><b>상황일지</b><span>실행이력·SMS·자원·조치결과를 시간순 자동 누적</span></div>
-      <div class="ov"><div class="n">08</div><b>결과보고</b><span>목차/반영자료 선택<br>조치결과 중심 보고서 생성</span></div>
+      <div class="ov"><div class="n">08</div><b>결과보고</b><span>공통 목차 편집·자료 선택<br>UNE 본문 조립·출력</span></div>
     </div>
     <div class="legend">
       <span class="lg user">사용자</span><span class="lg une">UNE</span><span class="lg t3q">T3Q</span><span class="lg ext">외부연계</span><span class="lg data">저장·이력</span>
@@ -190,7 +190,7 @@ body{margin:0;background:var(--bg);font-family:"Pretendard","Noto Sans KR","Appl
         <div class="lane-name">T3Q</div>
         <div class="lane-body">
           <div class="node t3qn"><strong>선택 문서 내용 검색·정리</strong>문서에 근거한 대응조치와 세부내용 구조화</div><span class="arrow">→</span>
-          <div class="node t3qn"><strong>조치 전체 상세 반환</strong>조치코드/조치명/대응단계/담당·지원·협업기관/세부행동/전파대상/필요자원</div>
+          <div class="node t3qn"><strong>조치 전체 상세 반환</strong>조치코드/조치명/대응단계/담당·지원·협업기관/세부행동/전파대상/필요자원/근거</div>
         </div>
       </div>
       <div class="lane-row">
@@ -254,7 +254,7 @@ body{margin:0;background:var(--bg);font-family:"Pretendard","Noto Sans KR","Appl
           <li>선택된 조치를 노드로 변환</li>
           <li>사용자가 정한 순서대로 기본 순차 연결</li>
           <li>노드 상세 자동입력 및 수정</li>
-          <li>상황판단 노드·분기조건·분기값별 연결대상은 사용자 편집</li>
+          <li>판단·분기·연결관계는 사용자 편집</li>
         </ul>
       </div>
     </div>
@@ -316,46 +316,70 @@ body{margin:0;background:var(--bg);font-family:"Pretendard","Noto Sans KR","Appl
   <section class="panel">
     <h2>5. 상세 순서도 — D. 수습·복구 → 상황일지 → 결과보고</h2>
     <div class="flowblock">
-      <div class="block-title">D-1. 복구도 동일한 “문서 선택 → 조치 선택 → 추가 SOP 생성” 구조 활용</div>
+      <div class="block-title">D-1. 수습·복구도 동일한 문서·조치·SOP Core를 사용</div>
       <div class="lane-row">
         <div class="lane-name">사용자 / UNE</div>
         <div class="lane-body">
-          <div class="decision"><span>복구 SOP 필요?</span></div>
-          <div class="branch"><span class="yes">YES</span><div class="node unen">현재 피해·조치상황을 Context로 복구 관련 문서 파일명 목록 요청</div></div>
-          <div class="branch"><span class="no">NO</span><div class="node unen">기존 SOP 실행이력 정리</div></div>
+          <div class="decision"><span>추가 수습·복구 SOP 필요?</span></div>
+          <div class="branch"><span class="yes">YES</span><div class="node unen">현재상황 + 기존 조치결과 + 사용자 추가현황을 Context로 관련 문서 조회</div></div>
+          <div class="branch"><span class="no">NO</span><div class="node unen">기존 SOP 실행이력·조치결과 정리</div></div>
         </div>
       </div>
       <div class="lane-row">
         <div class="lane-name">T3Q → UNE</div>
         <div class="lane-body">
-          <div class="node t3qn">복구 관련 문서 파일명 목록</div><span class="arrow">→</span>
+          <div class="node t3qn">관련 문서 파일명 목록</div><span class="arrow">→</span>
           <div class="node usern">문서 선택</div><span class="arrow">→</span>
-          <div class="node t3qn">복구 조치 목록 + 상세정보 일괄 반환</div><span class="arrow">→</span>
+          <div class="node t3qn">수습·복구 조치 목록 + 상세정보 일괄 반환</div><span class="arrow">→</span>
           <div class="node usern">조치 선택·순서확정</div><span class="arrow">→</span>
-          <div class="node unen">UNE가 기본 복구 SOP Flowchart 추가/별도 생성</div>
+          <div class="node unen">UNE 기본 수습·복구 SOP 구성</div>
         </div>
       </div>
+
       <div class="lane-row">
         <div class="lane-name">상황일지</div>
         <div class="lane-body">
-          <div class="node unen"><strong>상황 이벤트 원장 구성</strong>SOP 실행이력 + SMS + 자원 + 기상요약 + 조치결과 + 훈련상황부여(훈련 시)</div><span class="arrow">→</span>
-          <div class="node t3qn"><strong>상황일지 문안 생성</strong>확인된 이력만 이용</div><span class="arrow">→</span>
-          <div class="node usern"><strong>사용자 검토·수정</strong>미확인정보는 확인 필요 유지</div>
+          <div class="node unen"><strong>상황 이벤트 원장</strong>기상요약 + SOP 실행이력 + 조치결과 + SMS + 사용자입력 + 훈련상황부여/임무이력(훈련 시)</div><span class="arrow">→</span>
+          <div class="node t3qn"><strong>상황일지 문안 초안</strong>확인된 이력 기준</div><span class="arrow">→</span>
+          <div class="node usern"><strong>검토·수정·확정</strong></div>
         </div>
       </div>
+
       <div class="lane-row">
         <div class="lane-name">결과보고</div>
         <div class="lane-body">
-          <div class="node usern"><strong>목차 선택/직접입력</strong>실제재난 결과보고 또는 안전한국훈련 결과보고 유형 및 목차 구성</div><span class="arrow">→</span>
-          <div class="node usern"><strong>반영자료 체크</strong>SOP·SMS·자원·기상·사진·피해·복구</div><span class="arrow">→</span>
-          <div class="node t3qn"><strong>본문 초안</strong>선택자료 기반 T3Q 생성</div><span class="arrow">→</span>
-          <div class="node unen"><strong>문서 조립·편집·출력</strong>UNE 템플릿 / HWPX·DOCX·PDF</div>
+          <div class="node usern"><strong>보고 기본정보</strong>보고 구분·제목·기준시각 설정</div><span class="arrow">→</span>
+          <div class="node unen"><strong>공통 목차 목록</strong>상황 개요 / 주요 현황 / 주요 조치사항 / 향후 계획</div><span class="arrow">→</span>
+          <div class="node usern"><strong>목차 편집</strong>제목 수정·추가·삭제·순서변경</div><span class="arrow">→</span>
+          <div class="node usern"><strong>반영자료 지정</strong>목차별 시스템 보유자료 선택 + 추가현황 직접입력</div><span class="arrow">→</span>
+          <div class="node unen"><strong>본문 조립</strong>선택자료를 목차별 배치</div><span class="arrow">→</span>
+          <div class="node t3qn"><strong>문안 정리(협의)</strong>연계 확정 시 선택 적용</div><span class="arrow">→</span>
+          <div class="node unen"><strong>미리보기·편집·출력</strong>HWPX·DOCX·PDF 등</div>
         </div>
       </div>
     </div>
+
     <div class="subgrid">
-      <div class="box"><h4>조치결과 활용 원칙</h4><ul><li>SOP 상세에서 조치결과를 별도 입력</li><li>현장메모와 조치결과는 구분 저장</li><li>피해·복구 보고서는 조치결과를 우선 사용</li><li>상황일지와 결과보고 모두 조치결과를 핵심 원천으로 활용</li></ul></div>
-      <div class="box"><h4>결과보고 자료 수집 방식</h4><ul><li>기상상황: 공식 특보 + T3Q 기상요약</li><li>대응조치: 단계별 조치결과</li><li>상황전파: SMS 발송이력</li><li>자원: 수기/내부/향후 KRMS</li></ul></div>
+      <div class="box">
+        <h4>시스템에서 반영 가능한 자료</h4>
+        <ul>
+          <li>상황 시작 기본정보</li>
+          <li>기상특보 및 T3Q 기상요약</li>
+          <li>SOP 실행이력 및 조치결과</li>
+          <li>SMS 발송이력(사용한 경우)</li>
+          <li>확정 상황일지, 훈련 상황부여·임무이력(훈련 시)</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h4>사용자 직접입력 자료</h4>
+        <ul>
+          <li>피해·복구 현황</li>
+          <li>대피·이재민 현황</li>
+          <li>인력·장비·자원 투입</li>
+          <li>기관 지원사항 및 기타 현안</li>
+          <li>KRMS 정보는 실제 연계 전까지 자동자료로 사용하지 않음</li>
+        </ul>
+      </div>
     </div>
   </section>
 
@@ -364,12 +388,11 @@ body{margin:0;background:var(--bg);font-family:"Pretendard","Noto Sans KR","Appl
     <div class="rules">
       <div class="rule"><b>① 문서는 상세하게</b><span>개발·UIUX·기관협의 기준이므로 문서조회, 조치조회, SOP생성의 분리된 단계와 데이터 생성지점을 표시한다.</span></div>
       <div class="rule"><b>② 실제 화면은 단순하게</b><span>문서 선택 화면은 파일명만 표시하고, 조치 선택 화면도 체크 위주로 구성한다.</span></div>
-      <div class="rule"><b>③ UI 구현과 AI 역할 분리</b><span>T3Q는 문서와 조치별 상세정보까지 제공하고, 조치 간 관계·분기·필수성은 요구하지 않는다. UNE가 선택 순서 기반 기본 Flow와 실행·이력을 담당.</span></div>
-      <div class="rule"><b>④ 실제재난/훈련 공통 Core</b><span>안전한국훈련은 별도 시스템이 아니라 시작 Context와 상황부여 방식만 달리하고, SOP 생성·실행·상황일지·결과보고 Core는 공통으로 사용한다.</span></div>
-    </div>
+      <div class="rule"><b>③ UI 구현과 AI 역할 분리</b><span>T3Q는 문서와 조치별 상세정보까지 제공하고 조치 간 관계·분기는 요구하지 않는다. UNE가 기본 순차 Flow를 구성하고 상황판단 노드·분기조건·연결대상은 사용자가 편집한다.</span></div>
+      <div class="rule"><b>④ 실제재난/훈련 공통 Core</b><span>안전한국훈련은 별도 시스템이 아니라 시작 Context와 상황부여 방식만 달리하고, SOP 생성·실행·상황일지·결과보고 Core는 공통으로 사용한다.</span><div class="rule"><b>⑤ 결과보고는 UNE 독립 구성</b><span>UNE가 공통 목차 목록·자료 선택·사용자 직접입력·본문 조립·출력을 담당하며, T3Q 문안 정리는 협의 시 선택 적용한다.</span></div></div>
   </section>
 
-  <div class="footer">v1.0 · T3Q는 조치 상세까지만 제공하고, UNE는 기본 순차 Flow를 구성하며 상황판단 노드·분기조건·분기별 연결대상은 사용자가 편집하도록 역할을 확정. SOP 노드 설정의 근거문서 표시는 제외.</div>
+  <div class="footer">v1.1 · 결과보고를 공통 목차 편집·시스템 보유자료 선택·사용자 추가현황 입력·UNE 본문 조립 구조로 재정의. 피해·복구·인력·자원은 자동수집을 전제하지 않으며 T3Q 문안 정리는 협의사항으로 분리.</div>
 </div>
 </body>
 </html>

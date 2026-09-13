@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SegmentedControl, Badge as DsBadge, IconButton, Checkbox as DsCheckbox } from "@une-front/react-ui";
 import type { ReportSection, Situation } from "@/lib/types";
 import { useAppStore } from "@/store/useAppStore";
@@ -29,6 +29,7 @@ export function ReportTab({ s }: { s: Situation }) {
   const [newSec, setNewSec] = useState("");
   const [exporting, setExporting] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const generateRef = useRef<() => void>(() => {});
 
   const setSections = (sections: ReportSection[]) => st.updateReport(s.id, { sections });
   const applyToc = (tocId: string) => {
@@ -73,6 +74,15 @@ export function ReportTab({ s }: { s: Situation }) {
       setLive("");
     }
   };
+  // 시연모드: 패널에서 「AI 본문 초안 생성」을 원격 트리거
+  useEffect(() => {
+    generateRef.current = () => { if (!generating) void generate(); };
+  });
+  useEffect(() => {
+    const h = () => generateRef.current();
+    window.addEventListener("demo:generate-report", h);
+    return () => window.removeEventListener("demo:generate-report", h);
+  }, []);
 
   const doExport = async (kind: "hwpx" | "docx") => {
     setExporting(kind);

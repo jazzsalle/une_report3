@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Badge as DsBadge } from "@une-front/react-ui";
 import { Button, Card, PageHeader, TextInput, useToast } from "@/components/ui";
-import { IconRefresh, IconDownload, IconUpload, IconLinkOn, IconLinkOff } from "@/components/icons";
+import Link from "next/link";
+import { IconRefresh, IconDownload, IconUpload, IconLinkOn, IconLinkOff, IconPerson, IconArrowRight } from "@/components/icons";
 import { useAppStore } from "@/store/useAppStore";
 import { downloadBlob } from "@/lib/utils";
 import type { Situation } from "@/lib/types";
@@ -23,6 +24,7 @@ export default function SettingsPage() {
   const setUser = useAppStore((s) => s.setUser);
   const situations = useAppStore((s) => s.situations);
   const importSituation = useAppStore((s) => s.importSituation);
+  const contacts = useAppStore((s) => s.contacts.length);
   const [h, setH] = useState<Health | null>(null);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(user.name);
@@ -117,6 +119,17 @@ export default function SettingsPage() {
           <Info k="weatherSummary" v="지자체·재난유형 → 기상 요약문 (확인 필요 표시)" />
         </div>
       </Card>
+
+      <Link href="/settings/org" className="block group">
+        <div className="card p-[20rem] flex items-center gap-[16rem] hover:border-[var(--color-border-brand)] transition">
+          <span className="size-[48rem] rounded-xl grid place-items-center bg-[var(--color-surface-brand-subtle)] text-[var(--color-icon-brand)] shrink-0"><IconPerson size={24} /></span>
+          <div className="flex-1 min-w-0">
+            <div className="typo-body-lg font-medium text-[var(--color-text-primary)]">조직·연락처 관리</div>
+            <div className="typo-body-sm text-[var(--color-text-tertiary)] mt-[2rem]">상황전파 수신대상(부서명·직위·이름·전화번호·이메일) · 엑셀 양식 다운로드 · 일괄 업로드 · 등록 {contacts}명</div>
+          </div>
+          <IconArrowRight size={20} className="text-[var(--color-icon-tertiary)] group-hover:text-[var(--color-icon-brand)]" />
+        </div>
+      </Link>
 
       <Card title="사용자">
         <div className="grid md:grid-cols-[1fr_1fr_auto] gap-[12rem] items-end">

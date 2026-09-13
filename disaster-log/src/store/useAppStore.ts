@@ -8,6 +8,8 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type {
+  Contact,
+  ContactInput,
   AlertLevel,
   DisasterType,
   EventType,
@@ -74,6 +76,14 @@ interface AppState {
   setUser(u: { name: string; dept: string }): void;
   setUniStatus(s: AppState["uniStatus"]): void;
 
+  /** 조직·연락처 (설정 > 조직관리) */
+  contacts: Contact[];
+  addContact(c: ContactInput): string;
+  updateContact(id: string, patch: Partial<ContactInput>): void;
+  deleteContacts(ids: string[]): void;
+  /** 엑셀 일괄 업로드. mode=replace 면 기존 목록을 비우고 교체. 반환: 추가/갱신 수 */
+  importContacts(list: ContactInput[], mode: "append" | "replace" | "merge"): { added: number; updated: number };
+
   createSituation(input: NewSituationInput): string;
   updateSituation(id: string, patch: Partial<Situation>, ledger?: { title: string; body?: string; type?: EventType }): void;
   deleteSituation(id: string): void;
@@ -102,6 +112,8 @@ interface AppState {
   stopRun(id: string): void;
   updateRun(id: string, nodeId: string, patch: Partial<NodeRun>, ledger?: { title: string; body?: string; type?: EventType; source?: SourceKind }): void;
   startNode(id: string, nodeId: string): void;
+  /** 세부행동 체크/해제 — 체크 시 원장에 조치 수행 기록 */
+  toggleDetailCheck(id: string, nodeId: string, index: number, checked: boolean): void;
   completeNode(id: string, nodeId: string, result?: string, branchValue?: string): void;
   skipNode(id: string, nodeId: string): void;
 
@@ -153,6 +165,38 @@ export const useAppStore = create<AppState>()(
 
         setUser: (u) => set({ user: u }),
         setUniStatus: (s) => set({ uniStatus: s }),
+
+        contacts: [],
+        addContact: (c) => {
+          const id = uid("ct-");
+          const now = nowIso();
+          set((st) => ({ contacts: [...st.contacts, { ...c, id, createdAt: now, updatedAt: now }] }));
+          return id;
+        },
+        updateContact: (id, patch) => set((st) => ({ contacts: st.contacts.map((c) => (c.id === id ? { ...c, ...patch, updatedAt: nowIso() } : c)) })),
+        deleteContacts: (ids) => set((st) => ({ contacts: st.contacts.filter((c) => !ids.includes(c.id)) })),
+        importContacts: (list, mode) => {
+          const now = nowIso();
+          const norm = (v: string) => v.replace(/[^0-9]/g, "");
+          let added = 0;
+          let updated = 0;
+          set((st) => {
+            const base: Contact[] = mode === "replace" ? [] : [...st.contacts];
+            for (const c of list) {
+              const key = norm(c.phone);
+              const idx = mode === "merge" ? base.findIndex((x) => (key && norm(x.phone) === key) || (x.name === c.name && x.dept === c.dept)) : -1;
+              if (idx >= 0) {
+                base[idx] = { ...base[idx], ...c, updatedAt: now };
+                updated++;
+              } else {
+                base.push({ ...c, id: uid("ct-"), createdAt: now, updatedAt: now });
+                added++;
+              }
+            }
+            return { contacts: base };
+          });
+          return { added, updated };
+        },
 
         createSituation: (input) => {
           const id = uid("SIT-");
@@ -363,6 +407,23 @@ export const useAppStore = create<AppState>()(
             };
           }),
 
+        toggleDetailCheck: (id, nodeId, index, checked) =>
+          patchSit(id, (s) => {
+            const active = s.sopVersions.find((v) => v.id === s.activeSopVersionId);
+            const node = active?.nodes.find((n) => n.id === nodeId);
+            const detail = node?.data.details?.[index] ?? `세부행동 ${index + 1}`;
+            const prev = s.runs[nodeId] ?? { nodeId, status: "pending" as const };
+            const checks = { ...(prev.checks ?? {}) };
+            if (checked) checks[String(index)] = nowIso();
+            else delete checks[String(index)];
+            const run: NodeRun = { ...prev, checks, status: prev.status === "pending" && checked ? "running" : prev.status, startedAt: prev.startedAt ?? (checked ? nowIso() : undefined), assignee: prev.assignee ?? get().user.name };
+            return {
+              runs: { ...s.runs, [nodeId]: run },
+              currentNodeId: checked && prev.status === "pending" ? nodeId : s.currentNodeId,
+              ledger: checked ? [...s.ledger, ledgerEv({ type: "run", title: `세부행동 수행: ${detail}`, body: node ? `${node.data.title}${node.data.leadDept ? ` · ${node.data.leadDept}` : ""}` : undefined, source: "user", verify: "confirmed", refId: nodeId })] : s.ledger.filter((e) => !(e.refId === nodeId && e.title === `세부행동 수행: ${detail}`)),
+            };
+          }),
+
         completeNode: (id, nodeId, result, branchValue) =>
           patchSit(id, (s) => {
             const active = s.sopVersions.find((v) => v.id === s.activeSopVersionId);
@@ -531,7 +592,7 @@ export const useAppStore = create<AppState>()(
     {
       name: "disaster-log-store-v1",
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ user: s.user, situations: s.situations, order: s.order, templates: s.templates, templateOrder: s.templateOrder }),
+      partialize: (s) => ({ user: s.user, situations: s.situations, order: s.order, templates: s.templates, templateOrder: s.templateOrder, contacts: s.contacts }),
     },
   ),
 );

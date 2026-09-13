@@ -25,7 +25,14 @@ export default function SituationPage() {
   const sp = useSearchParams();
   const hydrated = useHydrated();
   const s = useAppStore((st) => st.situations[id]);
-  const [tab, setTab] = useState<TabKey>((sp.get("tab") as TabKey) || "overview");
+  const spTab = sp.get("tab") as TabKey | null;
+  const [tab, setTab] = useState<TabKey>(spTab || "overview");
+  // 시연모드 등 외부에서 ?tab= 이 바뀌면 따라간다 (렌더 중 상태 보정 패턴)
+  const [seenTab, setSeenTab] = useState(spTab);
+  if (spTab !== seenTab) {
+    setSeenTab(spTab);
+    if (spTab) setTab(spTab);
+  }
 
   const counts = useMemo(() => {
     if (!s) return { docs: 0, actions: 0, nodes: 0, done: 0, total: 0, events: 0 };

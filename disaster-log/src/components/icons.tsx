@@ -103,6 +103,19 @@ export const IconCall = wrap(DS.IconCall);
 export const IconRocket = wrap(DS.IconRocket);
 export const IconSerious = wrap(DS.IconSeriousLine);
 export const IconWalkie = wrap(DS.IconWalkietalkieLine);
+export const IconQuestion = wrap(DS.IconQuestionCircleLine);
+export const IconQuestionFill = wrap(DS.IconQuestionCircleFill);
+export const IconMail = wrap(DS.IconMail);
+export const IconPhone = wrap(DS.IconCall);
+export const IconPerson = wrap(DS.IconPerson);
+export const IconResize = wrap(DS.IconResize);
+export const IconPanelHide = wrap(DS.IconDoubleChevronRight);
+export const IconPanelShow = wrap(DS.IconDoubleChevronLeft);
+export const IconFullScreen = wrap(DS.IconFullScreen);
+export const IconFullScreenClose = wrap(DS.IconFullScreenClose);
+export const IconMore = wrap(DS.IconMoreVertical);
+export const IconClick = wrap(DS.IconClick);
+export const IconTag = wrap(DS.IconTag);
 
 /** DS 배포판(0.46.1)에 없는 아이콘 — lucide 대체 (SOP 노드 아이콘은 DS 차기 버전 IconNode* 로 교체 예정) */
 type LucideIcon = ComponentType<{ size?: number; className?: string }>;

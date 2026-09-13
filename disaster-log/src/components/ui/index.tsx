@@ -35,6 +35,7 @@ import {
   type SelectOption,
   type ModalSize as DsModalSize,
 } from "@une-front/react-ui";
+import { Tooltip as DsTooltip, IconQuestionCircleLine as DsIconQuestion } from "@une-front/react-ui";
 import { cn } from "@/lib/utils";
 import type { AlertLevel, Mode, VerifyState } from "@/lib/types";
 
@@ -300,5 +301,20 @@ export function PageHeader({ eyebrow, title, desc, right }: { eyebrow?: ReactNod
       </div>
       {right}
     </div>
+  );
+}
+
+// ── Help (용어 도움말 · 마우스 오버 툴팁) ─────────────────────────────────────
+/**
+ * 화면 용어 옆에 붙이는 ? 아이콘. hover 시 DS Tooltip(lg) 로 설명을 보여준다.
+ * 지자체 담당자에게 낯선 용어(상황변화 대응·실행본·분기값 등)에 사용.
+ */
+export function Help({ title, text, size = "sm", direction = "top", className }: { title?: ReactNode; text: ReactNode; size?: "sm" | "lg"; direction?: "top" | "bottom" | "left" | "right"; className?: string }) {
+  return (
+    <DsTooltip content={<span className="whitespace-pre-line leading-relaxed">{text}</span>} title={title} size={size} direction={direction} gap={6}>
+      <span role="img" aria-label="도움말" className={cn("inline-grid place-items-center size-[18rem] rounded-max text-[var(--color-icon-tertiary)] hover:text-[var(--color-icon-brand)] hover:bg-[var(--color-surface-brand-subtle)] cursor-help align-middle", className)}>
+        <DsIconQuestion size={16} />
+      </span>
+    </DsTooltip>
   );
 }

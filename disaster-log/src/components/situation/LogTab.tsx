@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SegmentedControl, Badge as DsBadge, FilterChip } from "@une-front/react-ui";
 import type { EventType, Situation, VerifyState } from "@/lib/types";
 import { useAppStore } from "@/store/useAppStore";
@@ -40,6 +40,14 @@ export function LogTab({ s, onNext }: { s: Situation; onNext: () => void }) {
   const toggleFilter = (t: EventType) => setFilters((f) => { const n = new Set(f); if (n.has(t)) n.delete(t); else n.add(t); return n; });
   const cycleVerify = (id: string, v: VerifyState) => st.setLedgerVerify(s.id, id, v === "confirmed" ? "unverified" : v === "unverified" ? "excluded" : "confirmed");
 
+  // 시연모드: 패널에서 「AI 초안 생성」을 원격 트리거
+  const generateRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    const h = () => generateRef.current();
+    window.addEventListener("demo:generate-log", h);
+    return () => window.removeEventListener("demo:generate-log", h);
+  }, []);
+
   const persist = (text: string, note?: string) => st.updateLog(s.id, s.log.final ? { final: text } : { draft: text }, note);
 
   const generate = async () => {
@@ -62,6 +70,9 @@ export function LogTab({ s, onNext }: { s: Situation; onNext: () => void }) {
       setStatus(null);
     }
   };
+  useEffect(() => {
+    generateRef.current = () => { if (!generating) void generate(); };
+  });
 
   const confirmLog = () => {
     st.updateLog(s.id, { final: draft, confirmedAt: new Date().toISOString(), confirmedBy: st.user.name }, "상황일지 확정");

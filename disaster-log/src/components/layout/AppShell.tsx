@@ -9,8 +9,10 @@ import { Header, LnbItem, IconButton, Badge as DsBadge, Tooltip } from "@une-fro
 import { useAppStore } from "@/store/useAppStore";
 import { useHydrated } from "@/lib/useHydrated";
 import { cn } from "@/lib/utils";
-import { ToastProvider } from "@/components/ui";
-import { IconDashboard, IconNew, IconBook, IconSettings, IconLinkOn, IconLinkOff, LogoSop, IconBell, IconFlow } from "@/components/icons";
+import { Button, ToastProvider } from "@/components/ui";
+import { DemoPanel } from "@/components/demo/DemoPanel";
+import { useDemoStore } from "@/store/useDemoStore";
+import { IconDashboard, IconNew, IconBook, IconSettings, IconLinkOn, IconLinkOff, LogoSop, IconBell, IconFlow, IconRocket } from "@/components/icons";
 
 const NAV = [
   { href: "/", label: "대시보드", icon: <IconDashboard size={20} /> },
@@ -29,6 +31,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const uniStatus = useAppStore((s) => s.uniStatus);
   const setUniStatus = useAppStore((s) => s.setUniStatus);
   const user = useAppStore((s) => s.user);
+  const demoActive = useDemoStore((s) => s.active);
+  const demoDockPad = useDemoStore((s) => s.active && !s.collapsed && s.dock === "right");
+  const demoStart = useDemoStore((s) => s.start);
+  const demoStop = useDemoStore((s) => s.stop);
 
   // UNI 연계 상태 주기 점검 (5분)
   useEffect(() => {
@@ -61,6 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (pathname === "/sops") return "SOP 라이브러리";
     if (pathname?.startsWith("/sops/")) return "SOP 편집";
     if (pathname === "/settings") return "설정·연계상태";
+    if (pathname === "/settings/org") return "조직·연락처 관리";
     if (pathname?.startsWith("/situations/")) {
       const id = pathname.split("/")[2];
       return hydrated ? situations[id]?.title ?? "업무" : "업무";
@@ -95,6 +102,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </span>
                   <DsBadge label={uniStatus == null ? "UNI 확인 중" : uniStatus.reachable ? "UNI 연결" : "UNI 대체모드"} color={uniStatus?.reachable ? "success" : "light-warning"} variant="dot-neutral" size="xs" />
                 </span>
+              </Tooltip>
+              <Tooltip content={demoActive ? "시연모드 종료" : "산불 대응 시나리오를 단계별로 자동 시연합니다 (화면을 가리지 않는 안내 패널)"} direction="bottom">
+                <Button size="sm" variant={demoActive ? "primary" : "outline"} leftIcon={<IconRocket size={16} />} onClick={() => (demoActive ? demoStop() : demoStart("wildfire"))} className={cn(!demoActive && "!border-[var(--color-border-brand)] !text-[var(--color-text-brand)]")}>
+                  {demoActive ? "시연 중" : "시연모드"}
+                </Button>
               </Tooltip>
               <IconButton icon={<IconBell size={20} />} variant="ghost" color="grayscale" size="sm" aria-label="알림" />
               <IconButton icon={<IconSettings size={20} />} variant="ghost" color="grayscale" size="sm" aria-label="설정" onClick={() => router.push("/settings")} />
@@ -139,7 +151,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </aside>
 
           {/* Main */}
-          <main className="flex-1 min-w-0 bg-[var(--color-bg-subtle)]">
+          <main className={cn("flex-1 min-w-0 bg-[var(--color-bg-subtle)] transition-[padding] duration-200", demoDockPad && "2xl:pr-[416px]")}>
             <div className="no-print md:hidden flex items-center gap-[8rem] px-[16rem] py-[10rem] bg-[var(--color-surface-primary)] border-b border-[var(--color-border-subtle)] overflow-x-auto">
               {NAV.map((n) => (
                 <Link key={n.href} href={n.href} className={cn("whitespace-nowrap px-[12rem] h-[32rem] inline-flex items-center rounded-lg typo-body-md", pathname === n.href ? "bg-[var(--color-interaction-primary-bg-muted-default)] text-[var(--color-text-brand)] font-medium" : "text-[var(--color-text-secondary)]")}>
@@ -151,6 +163,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
+      <DemoPanel />
     </ToastProvider>
   );
 }

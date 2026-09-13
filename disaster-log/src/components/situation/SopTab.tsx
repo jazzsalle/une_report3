@@ -5,10 +5,11 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { IconButton, Badge as DsBadge, Checkbox as DsCheckbox } from "@une-front/react-ui";
 import type { NodeKind, Situation, SopEdge, SopNode, SubMission } from "@/lib/types";
 import { useAppStore } from "@/store/useAppStore";
-import { Badge, Button, Dots, Modal, SelectBox, TextArea, TextInput, useToast } from "@/components/ui";
+import { Badge, Button, Dots, Help, Modal, SelectBox, TextArea, TextInput, useToast } from "@/components/ui";
 import { IconAi, IconPlus, IconNodeDecision, IconAnnounce, IconStorage, IconCheckCircle, IconArrowRight, IconClock, IconTrash, IconStop, IconArrowUp, IconInfo, IconNodeProcess } from "@/components/icons";
 import { SopCanvas } from "@/components/sop/SopCanvas";
 import { LibraryPicker } from "@/components/sop/LibraryPicker";
+import { SidePanel, SidePanelOpener, useSidePanel } from "@/components/sop/SidePanel";
 import Link from "next/link";
 import { Card as DsCard } from "@une-front/react-ui";
 import { IconDocsCheck, IconList, IconSave, IconFlow } from "@/components/icons";
@@ -58,6 +59,7 @@ function SopTabInner({ s, onNext, onGoDocs }: { s: Situation; onNext: () => void
   };
   const [selId, setSelId] = useState<string | null>(null);
   const [selEdge, setSelEdge] = useState<string | null>(null);
+  const panel = useSidePanel();
   const [aiOpen, setAiOpen] = useState(false);
   const [fitKey, setFitKey] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -186,7 +188,7 @@ function SopTabInner({ s, onNext, onGoDocs }: { s: Situation; onNext: () => void
     return (
       <div className="p-[28rem] max-w-[1100px] mx-auto">
         <div className="mb-[16rem]">
-          <div className="typo-body-lg font-medium text-[var(--color-text-primary)]">이 상황에서 실행할 SOP 를 정하세요</div>
+          <div className="typo-body-lg font-medium text-[var(--color-text-primary)] flex items-center gap-[6rem]">이 상황에서 실행할 SOP 를 정하세요 <Help size="lg" title="SOP 준비 3가지 방법" text={"① 라이브러리에서 선택: 미리 만들어 게시해 둔 SOP 를 이 상황에 복사(배포)해 바로 실행합니다.\n② 문서·조치 선택으로 구성: 매뉴얼에서 조치를 골라 이 상황 전용 SOP 를 새로 만듭니다.\n③ AI 자유생성: 상황을 문장으로 설명하면 UNI RAG 가 SOP 초안을 그려 줍니다.\n\n어느 방법이든 실행 전에는 「실행본 확정」 단계를 거칩니다."} /></div>
           <div className="typo-body-sm text-[var(--color-text-tertiary)] mt-[2rem]">S07 · 실행할 SOP 는 「라이브러리 게시본 배포」 또는 「이 상황에서 구성 → 실행본 확정」 두 경로로 준비됩니다.</div>
         </div>
         <div className="grid md:grid-cols-3 gap-[12rem]">
@@ -228,6 +230,7 @@ function SopTabInner({ s, onNext, onGoDocs }: { s: Situation; onNext: () => void
             <SelectBox size="xs" value={active.id} onChange={(v) => st.setActiveSop(s.id, v)} options={s.sopVersions.map((v) => ({ value: v.id, label: `v${v.version} · ${v.label}` }))} />
           </div>
           <DsBadge label={active.kind === "confirmed" ? "실행본" : active.kind === "edited" ? "수정본" : "추천 원본"} color={active.kind === "confirmed" ? "success" : active.kind === "edited" ? "light-warning" : "primary"} variant="solid-pastel" size="sm" />
+          <Help size="lg" title="SOP 버전 종류" direction="bottom" text={"· 추천 원본: 문서·조치 선택으로 자동 구성된 최초 Flow\n· 수정본: 노드·연결을 편집해 저장된 중간 버전\n· 실행본: 「실행본 확정」으로 잠근 버전. 실행·조치결과 탭에서는 실행본만 실행할 수 있습니다.\n\n버전은 모두 보관되며 언제든 다른 버전을 선택해 다시 확정할 수 있습니다."} />
           {active.kind !== "confirmed" ? (
             <Button size="sm" variant="success" disabled={isGenerating} leftIcon={<IconCheckCircle size={16} />} onClick={() => setConfirmOpen(true)}>실행본 확정</Button>
           ) : (
@@ -236,9 +239,10 @@ function SopTabInner({ s, onNext, onGoDocs }: { s: Situation; onNext: () => void
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_360px]">
-        <div className="relative min-h-[420px]">
+      <div className="flex-1 min-h-0 flex">
+        <div className="relative min-h-[420px] flex-1 min-w-0">
           <SopCanvas nodes={nodes} edges={edges} readOnly={isGenerating} onChange={onCanvasChange} onSelect={(n, e) => { setSelId(n); setSelEdge(e); }} fitKey={fitKey} />
+          <SidePanelOpener hidden={panel.hidden} onToggle={() => panel.toggle()} />
           {isGenerating && (
             <div className="absolute left-[16rem] top-[16rem] flex items-center gap-[8rem] bg-[var(--color-surface-primary)] border border-[var(--color-border-subtle)] rounded-xl px-[12rem] py-[8rem] shadow-[var(--elevation-03)]">
               <IconAi size={16} className="text-[var(--color-icon-brand)] pulse-soft" />
@@ -253,8 +257,8 @@ function SopTabInner({ s, onNext, onGoDocs }: { s: Situation; onNext: () => void
           </div>
         </div>
 
-        {/* 우측 패널 */}
-        <aside className="no-print border-l border-[var(--color-border-subtle)] bg-[var(--color-surface-primary)] overflow-y-auto">
+        {/* 우측 패널 — 접기 · 폭 조절 */}
+        <SidePanel width={panel.width} onWidth={panel.setWidth} hidden={panel.hidden} onToggle={() => panel.toggle()} header={<span className="typo-body-sm font-medium text-[var(--color-text-secondary)] truncate">{selNode ? `노드 속성 · ${KIND_LABEL[selNode.data.kind]}` : "편집 안내 · 버전 이력"}</span>}>
           {selNode ? (
             <NodePanel node={selNode} edges={edges} nodes={nodes} onPatch={(fn) => patchNode(selNode.id, fn)} onPatchEdge={patchEdge} readOnly={isGenerating} />
           ) : (
@@ -278,10 +282,10 @@ function SopTabInner({ s, onNext, onGoDocs }: { s: Situation; onNext: () => void
                   ))}
                 </div>
               </div>
-              <div className="typo-body-sm text-[var(--color-text-helper)] leading-relaxed">단축키: 노드/연결 선택 후 Delete 삭제 · 노드 하단 핸들을 드래그해 연결 · 상황판단 노드는 우측 핸들로 분기 연결</div>
+              <div className="typo-body-sm text-[var(--color-text-helper)] leading-relaxed">단축키: 노드/연결 선택 후 Delete 삭제 · 노드 하단 핸들을 드래그해 연결 · 상황판단 노드는 우측 핸들로 분기 연결 · 패널 왼쪽 가장자리를 드래그해 폭 조절</div>
             </div>
           )}
-        </aside>
+        </SidePanel>
       </div>
 
       {aiModal}
