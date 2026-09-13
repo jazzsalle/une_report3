@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { SegmentedControl, Badge as DsBadge, ChoiceChip, Checkbox as DsCheckbox } from "@une-front/react-ui";
-import type { Contact, NodeRun, ResourceSource, Situation, SopNode } from "@/lib/types";
+import type { NodeRun, ResourceSource, Situation, SopNode } from "@/lib/types";
 import { useAppStore } from "@/store/useAppStore";
 import { Badge, Button, Card, EmptyState, Field, Help, Modal, SelectBox, TextArea, TextInput, useToast } from "@/components/ui";
-import { IconPlay, IconStop, IconCheckCircle, IconSkip, IconMessage, IconStorage, IconAttach, IconNodeDecision, IconArrowRight, IconDocsCheck, IconAnnounce, IconSend, IconRefresh, IconMemo, IconClick, IconPerson, IconClock } from "@/components/icons";
+import { IconPlay, IconStop, IconCheckCircle, IconSkip, IconStorage, IconAttach, IconNodeDecision, IconArrowRight, IconDocsCheck, IconAnnounce, IconSend, IconRefresh, IconMemo, IconClick, IconClock } from "@/components/icons";
 import { SopCanvas } from "@/components/sop/SopCanvas";
 import { LibraryPicker } from "@/components/sop/LibraryPicker";
+import { DispatchModal, DispatchStatus } from "@/components/situation/DispatchModal";
+import { useDispatchSync } from "@/lib/dispatch/useDispatchSync";
 import { orderedNodeIds } from "@/lib/sop/converters";
 import { cn, fmtDateTime, fmtTime, nowIso } from "@/lib/utils";
 import Link from "next/link";
@@ -51,6 +53,14 @@ export function RunTab({ s, onNext }: { s: Situation; onNext: () => void }) {
     return null;
   });
   const [seenRunning, setSeenRunning] = useState(s.running);
+  // 현장 요원 모바일 응답(수신확인·임무완료·조치사항) 수신 → 원장·실행내역 반영
+  useDispatchSync(s);
+  // 시연모드 등 외부에서 특정 조치를 선택하도록 요청
+  useEffect(() => {
+    const h = (e: Event) => setSelId((e as CustomEvent<string>).detail);
+    window.addEventListener("demo:select-node", h);
+    return () => window.removeEventListener("demo:select-node", h);
+  }, []);
 
   const ordered = useMemo(() => (active ? orderedNodeIds(active.nodes, active.edges) : []), [active]);
   const nodes = useMemo(() => active?.nodes ?? [], [active]);
@@ -188,7 +198,7 @@ export function RunTab({ s, onNext }: { s: Situation; onNext: () => void }) {
         </Card>
       </div>
 
-      {sel && <SmsModal open={smsOpen} onClose={() => setSmsOpen(false)} s={s} node={sel} />}
+      {sel && <DispatchModal key={sel.id + String(smsOpen)} open={smsOpen} onClose={() => setSmsOpen(false)} s={s} node={sel} />}
       {sel && <ResourceModal open={resOpen} onClose={() => setResOpen(false)} s={s} node={sel} />}
 
       {/* 상황변화 메모 */}
@@ -283,7 +293,7 @@ function NodeWork({ s, node, run, onSms, onRes }: { s: Situation; node: SopNode;
   const [emptyConfirm, setEmptyConfirm] = useState(false);
   const terminal = d.kind === "start" || d.kind === "end";
   const saveFields = (extra?: Partial<NodeRun>) => st.updateRun(s.id, node.id, { result: result || undefined, fieldMemo: memo || undefined, assignee, ...extra });
-  const nodeSms = s.sms.filter((m) => m.nodeId === node.id);
+  const nodeDispatch = (s.dispatches ?? []).filter((m) => m.nodeId === node.id);
   const nodeRes = s.resources.filter((r) => r.nodeId === node.id);
   const activeVer = s.sopVersions.find((v) => v.id === s.activeSopVersionId);
   const branchTargets = activeVer?.edges.filter((e) => e.source === node.id && (e.label ?? "") === branch).map((e) => activeVer.nodes.find((n) => n.id === e.target)?.data.title ?? e.target) ?? [];
@@ -380,8 +390,9 @@ function NodeWork({ s, node, run, onSms, onRes }: { s: Situation; node: SopNode;
                 <TextArea label="조치결과 (UFR-005-005) *" minHeight={84} value={result} onChange={(e) => setResult(e.target.value)} onBlur={() => saveFields()} placeholder="예) 구·군 상황실 및 재난공무원 UMS 전파 완료(수신 1,240명)" helperText="상황일지·결과보고의 핵심 원천자료. 비워 두고 완료하면 체크한 세부행동이 자동 정리됩니다." intent={result ? "complete" : "default"} />
                 {checkedCount > 0 && !result && !locked && <button type="button" className="mt-[6rem] typo-body-sm text-[var(--color-text-brand)] underline" onClick={() => setResult(summarizeChecks())}>체크한 세부행동 {checkedCount}건을 조치결과로 채우기</button>}
               </div>
+              <DispatchStatus s={s} nodeId={node.id} />
               <div className="flex flex-wrap gap-[8rem] items-center">
-                <Button size="sm" variant="outline" leftIcon={<IconMessage size={16} />} onClick={onSms}>SMS 발송{nodeSms.length ? ` (${nodeSms.length})` : ""}</Button>
+                <Button size="sm" variant="outline" className="!border-[var(--purple-75)] !text-[var(--purple-600)]" leftIcon={<IconSend size={16} />} onClick={onSms}>상황전파 발송{nodeDispatch.length ? ` (${nodeDispatch.length})` : ""}</Button>
                 <Button size="sm" variant="outline" leftIcon={<IconStorage size={16} />} onClick={onRes}>자원 투입{nodeRes.length ? ` (${nodeRes.length})` : ""}</Button>
                 <label className="inline-flex items-center gap-[6rem] typo-body-md font-medium cursor-pointer rounded-sm border border-[var(--color-interaction-secondary-border-default)] px-[12rem] h-[32rem] hover:bg-[var(--color-interaction-secondary-bg-subtle-hover)] text-[var(--color-text-basic)]">
                   <IconAttach size={16} /> 증빙 첨부
@@ -424,95 +435,6 @@ function NodeWork({ s, node, run, onSms, onRes }: { s: Situation; node: SopNode;
         <div className="typo-body-sm text-[var(--color-text-tertiary)]">권장: 세부행동을 체크하거나 조치결과를 한 줄이라도 남겨 두세요.</div>
       </Modal>
     </Card>
-  );
-}
-
-// ── SMS 모달 (조직·연락처 연동) ─────────────────────────────────────────────
-function SmsModal({ open, onClose, s, node }: { open: boolean; onClose: () => void; s: Situation; node: SopNode }) {
-  const toast = useToast();
-  const st = useAppStore();
-  const contacts = st.contacts;
-  const spread = node.data.subMissions.find((m) => m.type === "spread");
-  const [recipients, setRecipients] = useState((node.data.targets ?? []).join(", "));
-  const [message, setMessage] = useState(spread?.spreadContent ?? `[${s.organization} 재대본] ${node.data.title} 관련 안내입니다.`);
-  const [picked, setPicked] = useState<Set<string>>(new Set());
-  const [deptFilter, setDeptFilter] = useState<string | null>(null);
-  const [q, setQ] = useState("");
-  const depts = useMemo(() => Array.from(new Set(contacts.map((c) => c.dept))).sort(), [contacts]);
-  const visible = useMemo(() => contacts.filter((c) => (!deptFilter || c.dept === deptFilter) && (!q || `${c.name}${c.position}${c.dept}${c.phone}`.includes(q))), [contacts, deptFilter, q]);
-  const label = (c: Contact) => `${c.name} ${c.position}(${c.dept}, ${c.phone})`;
-  const togglePick = (c: Contact) => {
-    setPicked((p) => {
-      const n = new Set(p);
-      if (n.has(c.id)) n.delete(c.id);
-      else n.add(c.id);
-      return n;
-    });
-  };
-  const applyPicked = () => {
-    const names = contacts.filter((c) => picked.has(c.id)).map(label);
-    const cur = recipients.split(",").map((x) => x.trim()).filter(Boolean);
-    setRecipients(Array.from(new Set([...cur, ...names])).join(", "));
-    toast.success(`${names.length}명을 수신대상에 추가했습니다`);
-  };
-  const pickDept = (dept: string) => {
-    setPicked((p) => {
-      const n = new Set(p);
-      contacts.filter((c) => c.dept === dept).forEach((c) => n.add(c.id));
-      return n;
-    });
-  };
-  return (
-    <Modal open={open} onClose={onClose} title="상황전파 SMS 발송" description="UFR-006-001/002 · T3Q 전파대상은 추천정보이며 실제 수신자는 사용자가 확정합니다. 발송이력은 SOP 조치와 연결되어 상황일지·결과보고에 반영됩니다." size="lg" footer={<><Button variant="ghost" onClick={onClose}>취소</Button><Button leftIcon={<IconSend size={16} />} onClick={() => { const rs = recipients.split(",").map((x) => x.trim()).filter(Boolean); if (!rs.length || !message.trim()) return toast.error("수신대상과 문안을 입력하세요"); st.addSms(s.id, { nodeId: node.id, recipients: rs, message }); toast.success("SMS를 발송했습니다 (UNE SMS 모듈 모의)"); onClose(); }}>발송</Button></>}>
-      <div className="grid md:grid-cols-[1fr_300px] gap-[16rem]">
-        <div className="space-y-[12rem]">
-          <TextInput label="수신대상 (쉼표 구분)" value={recipients} onChange={(e) => setRecipients(e.target.value)} placeholder="시장, 부시장, 구·군 재난담당관, 유관기관 상황실" />
-          <TextArea label="발송 문안" minHeight={110} value={message} onChange={(e) => setMessage(e.target.value)} showCounter maxLength={2000} />
-          {s.sms.filter((m) => m.nodeId === node.id).length > 0 && (
-            <div>
-              <div className="label mb-[4rem]">이 조치의 발송이력</div>
-              {s.sms.filter((m) => m.nodeId === node.id).map((m) => (
-                <div key={m.id} className="typo-body-sm flex gap-[8rem] items-center py-[4rem] border-t border-[var(--color-border-subtle)]"><span className="font-mono text-[var(--color-text-tertiary)]">{fmtTime(m.at)}</span><span className="flex-1 truncate text-[var(--color-text-basic)]">{m.recipients.join(", ")}</span><DsBadge label={m.result === "success" ? "성공" : "실패"} color={m.result === "success" ? "success" : "error"} variant="solid-pastel" size="xs" /></div>
-              ))}
-            </div>
-          )}
-        </div>
-        {/* 조직·연락처에서 선택 */}
-        <div className="rounded-xl border border-[var(--color-border-subtle)] flex flex-col min-h-[300px] max-h-[420px]">
-          <div className="px-[12rem] pt-[10rem] pb-[8rem] border-b border-[var(--color-border-subtle)]">
-            <div className="flex items-center gap-[6rem] typo-body-sm font-medium text-[var(--color-text-primary)]"><IconPerson size={16} /> 조직·연락처에서 선택 <span className="ml-auto text-[var(--color-text-tertiary)] font-normal">{picked.size}명</span></div>
-            {contacts.length > 0 ? (
-              <>
-                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름·직위·부서 검색" className="mt-[8rem] w-full h-[28rem] px-[8rem] rounded-md border border-[var(--color-border-default)] typo-body-sm bg-[var(--color-surface-primary)] outline-none focus:border-[var(--color-border-brand)]" />
-                <div className="flex gap-[4rem] flex-wrap mt-[8rem]">
-                  <ChoiceChip label="전체" size="sm" variant="outline" selected={!deptFilter} onClick={() => setDeptFilter(null)} />
-                  {depts.map((dp) => <ChoiceChip key={dp} label={dp} size="sm" variant="outline" selected={deptFilter === dp} onClick={() => setDeptFilter(deptFilter === dp ? null : dp)} />)}
-                </div>
-              </>
-            ) : (
-              <div className="typo-body-sm text-[var(--color-text-tertiary)] mt-[6rem] leading-relaxed">등록된 연락처가 없습니다. <Link href="/settings/org" className="text-[var(--color-text-brand)] underline">설정 › 조직·연락처 관리</Link>에서 등록하거나 엑셀로 일괄 업로드하세요.</div>
-            )}
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {visible.map((c) => (
-              <label key={c.id} className={cn("flex items-start gap-[8rem] px-[12rem] py-[6rem] border-b border-[var(--color-border-subtle)] cursor-pointer hover:bg-[var(--color-surface-subtle)]", picked.has(c.id) && "bg-[var(--color-surface-brand-subtle)]")}>
-                <DsCheckbox checked={picked.has(c.id)} onCheckedChange={() => togglePick(c)} size="sm" className="mt-[1px]" />
-                <span className="min-w-0 flex-1">
-                  <span className="typo-body-sm font-medium text-[var(--color-text-primary)]">{c.name} <span className="font-normal text-[var(--color-text-tertiary)]">{c.position}</span></span>
-                  <span className="block typo-body-sm text-[var(--color-text-tertiary)] truncate">{c.dept} · {c.phone}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-          {contacts.length > 0 && (
-            <div className="p-[8rem] border-t border-[var(--color-border-subtle)] flex gap-[6rem]">
-              {deptFilter && <Button size="xs" variant="ghost" onClick={() => pickDept(deptFilter)}>{deptFilter} 전체 선택</Button>}
-              <Button size="xs" className="ml-auto" disabled={!picked.size} onClick={applyPicked}>수신대상에 추가</Button>
-            </div>
-          )}
-        </div>
-      </div>
-    </Modal>
   );
 }
 

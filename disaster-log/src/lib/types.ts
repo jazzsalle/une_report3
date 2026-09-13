@@ -126,6 +126,8 @@ export interface SopNodeData extends Record<string, unknown> {
   branches?: string[];
   ui: { color?: string; fontSize?: number; charstSort?: string };
   actionId?: string;
+  /** 상황전파 채널 (SMS · 이메일). 미지정 시 SMS */
+  channels?: DispatchChannel[];
 }
 
 export interface SopNode {
@@ -345,6 +347,8 @@ export interface Situation {
   currentNodeId?: string;
 
   sms: SmsRecord[];
+  /** 상황전파 발송(모바일 링크) 및 현장 요원 수신확인·임무완료 응답 */
+  dispatches?: Dispatch[];
   resources: ResourceRecord[];
   ledger: LedgerEvent[];
 
@@ -353,10 +357,16 @@ export interface Situation {
 }
 
 // ── 조직·연락처 (상황전파 수신대상 · 설정 > 조직관리) ─────────────────────────
+/** 조직 구분 — 부산 풍수해 매뉴얼 재난안전대책본부 편성: 지휘부 · 13개 협업기능별 실무반 · 유관기관 */
+export type OrgType = "command" | "team" | "agency";
+export const ORG_TYPE_LABEL: Record<OrgType, string> = { command: "지휘부", team: "실무반(협업기능반)", agency: "유관기관(협업기관)" };
+
 export interface Contact {
   id: string;
-  dept: string; // 부서명
-  position: string; // 직위
+  orgType: OrgType; // 구분
+  unit: string; // 실무반 또는 기관명 (예: 재난상황관리반 · 부산소방재난본부)
+  dept: string; // 부서명 (예: 자연재난과 · 119종합상황실)
+  position: string; // 직위·직책
   name: string; // 이름
   phone: string; // 전화번호
   email?: string; // 이메일
@@ -365,3 +375,71 @@ export interface Contact {
   updatedAt: string;
 }
 export type ContactInput = Omit<Contact, "id" | "createdAt" | "updatedAt">;
+
+/** 주소록 전송그룹 — 상황전파 시 그룹 단위 선택 */
+export interface SendGroup {
+  id: string;
+  name: string;
+  description?: string;
+  memberIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── 상황전파 발송 · 현장 응답 (모바일 웹) ─────────────────────────────────────
+export type DispatchChannel = "sms" | "email";
+export const CHANNEL_LABEL: Record<DispatchChannel, string> = { sms: "SMS", email: "이메일" };
+
+export interface DispatchRecipient {
+  token: string; // 모바일 링크 토큰 (인증 없음)
+  contactId?: string;
+  name: string;
+  position?: string;
+  dept?: string;
+  phone?: string;
+  email?: string;
+  receivedAt?: string; // 수신확인
+  completedAt?: string; // 임무완료
+  note?: string; // 조치사항(옵션)
+  noteAt?: string;
+}
+
+export interface Dispatch {
+  id: string;
+  nodeId?: string;
+  nodeTitle?: string;
+  channels: DispatchChannel[];
+  title: string;
+  message: string;
+  sentAt: string;
+  sentBy: string;
+  groupNames?: string[];
+  recipients: DispatchRecipient[];
+  result: "success" | "fail";
+}
+
+/** 모바일 페이지 링크에 담기는 최소 정보 (base64url) */
+export interface DispatchPayload {
+  v: 1;
+  id: string; // dispatch id
+  t: string; // token
+  sid: string; // situation id
+  org: string;
+  sit: string; // 상황 제목
+  level: string; // 위기경보
+  node?: string;
+  title: string;
+  msg: string;
+  from: string;
+  at: string;
+  to: { name: string; position?: string; dept?: string };
+  ch: DispatchChannel[];
+}
+
+export type DispatchAckKind = "received" | "completed" | "note";
+export interface DispatchAck {
+  token: string;
+  kind: DispatchAckKind;
+  at: string;
+  note?: string;
+}

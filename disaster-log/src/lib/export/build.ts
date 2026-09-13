@@ -25,6 +25,10 @@ export function baseMeta(s: Situation): [string, string][] {
 export function reportMarkdown(s: Situation): string {
   const r = s.report;
   const parts = r.sections.filter((x) => x.enabled).map((sec) => `## ${sec.title}\n\n${sec.body?.trim() || "_(내용 없음)_"}`);
+  if (r.includes.sms && (s.dispatches ?? []).length) {
+    const rows = (s.dispatches ?? []).flatMap((d) => d.recipients.map((x) => `| ${fmtDateTime(d.sentAt)} | ${d.title.replace(/\|/g, "／")} | ${x.name}${x.position ? " " + x.position : ""}${x.dept ? "(" + x.dept + ")" : ""} | ${d.channels.map((c) => (c === "sms" ? "SMS" : "이메일")).join("·")} | ${x.receivedAt ? fmtDateTime(x.receivedAt) : "-"} | ${x.completedAt ? fmtDateTime(x.completedAt) : "-"} | ${(x.note ?? "").replace(/\|/g, "／")} |`));
+    parts.push(`## 붙임 1-1. 상황전파 수신확인·임무완료 현황\n\n| 발송시각 | 제목 | 수신자 | 채널 | 수신확인 | 임무완료 | 조치사항 |\n|---|---|---|---|---|---|---|\n${rows.join("\n")}`);
+  }
   if (r.includes.sms && s.sms.length) {
     parts.push(`## 붙임 1. SMS 발송이력\n\n| 발송시각 | 수신대상 | 문안 | 결과 |\n|---|---|---|---|\n${s.sms.map((m) => `| ${fmtDateTime(m.at)} | ${m.recipients.join(", ")} | ${m.message.replace(/\|/g, "／")} | ${m.result === "success" ? "성공" : "실패"} |`).join("\n")}`);
   }

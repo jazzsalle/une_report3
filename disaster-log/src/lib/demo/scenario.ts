@@ -43,7 +43,8 @@ export interface DemoScenario {
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const fire = (name: string) => window.dispatchEvent(new CustomEvent(name));
+const fire = (name: string, detail?: unknown) => window.dispatchEvent(new CustomEvent(name, { detail }));
+const selectNode = async (ctx: DemoCtx, index: number) => { await sleep(500); const n = workNodes(ctx)[index]; if (n) fire("demo:select-node", n.id); };
 
 const WILDFIRE_DOCS = ["doc-wildfire-2024", "doc-wildfire-standard"];
 const WILDFIRE_CODES = ["가-1", "가-2", "나-1", "나-2", "다-0", "다-2"];
@@ -198,6 +199,7 @@ export const WILDFIRE_SCENARIO: DemoScenario = {
       points: ["세부행동 체크 → 원장에 「세부행동 수행」 기록", "조치결과는 상황일지·결과보고의 핵심 원천", "현장메모는 공식 결과와 구분되어 저장"],
       tryIt: "두 번째 조치를 선택해 세부행동을 직접 체크해 보세요",
       href: (c) => `/situations/${c.situationId}?tab=run`,
+      after: (ctx) => selectNode(ctx, 0),
       run: async (ctx) => {
         const nodes = workNodes(ctx);
         const first = nodes[0];
@@ -211,25 +213,59 @@ export const WILDFIRE_SCENARIO: DemoScenario = {
     },
     {
       id: "sms",
-      title: "상황전파 SMS · 자원 투입",
-      where: "업무 › 실행·조치결과 탭 › SMS 발송 · 자원 투입",
-      narration: "상황판단회의 조치에서 설정 › 조직·연락처에 등록된 부서·담당자를 골라 SMS 를 발송했고, 진화헬기·진화차·진화대 투입을 자원으로 등록했습니다. 발송이력과 투입자원은 조치에 연결돼 결과보고서의 전파·자원 현황표로 자동 집계됩니다.",
-      points: ["수신대상은 조직·연락처(엑셀 일괄 업로드)에서 부서별 선택", "자원 출처: 수기 · 내부 자원목록 · KRMS(연계 예정)", "회수 시각까지 기록해 투입 기간 산출"],
-      tryIt: "우측 「SMS 발송」을 열어 조직·연락처에서 부서를 골라 보세요",
+      title: "상황전파 발송 · 자원 투입",
+      where: "업무 › 실행·조치결과 탭 › 상황전파 발송 · 자원 투입",
+      narration: "상황판단회의 조치에서 조직도(지휘부·13개 실무반·유관기관)와 전송그룹에서 수신자를 골라 SMS·이메일로 상황전파를 발송했습니다. 각 수신자에게는 인증 없이 열리는 모바일 응답 링크(QR)가 함께 가고, 진화헬기·진화차·진화대 투입은 자원으로 등록했습니다.",
+      points: ["수신자: 사람 단위 또는 주소록 전송그룹 단위 · 조치의 주관·지원·협업 부서는 자동 추천", "채널: SOP 노드에 지정한 SMS·이메일 기본값을 발송 시 변경 가능", "모바일 페이지: 수신확인 → 임무완료 → 조치사항(선택) 3단계, 갤럭시·크롬 기준 반응형"],
+      tryIt: "우측 「상황전파 발송」을 열어 모바일 미리보기를 보고, 발송 후 QR 을 휴대폰으로 스캔해 보세요",
       href: (c) => `/situations/${c.situationId}?tab=run`,
+      after: (ctx) => selectNode(ctx, 1),
       run: async (ctx) => {
         const nodes = workNodes(ctx);
         const n2 = nodes[1];
         if (!n2) return;
         const st = useAppStore.getState();
-        const picks = st.contacts.filter((c) => /산림|상황실|안전총괄/.test(c.dept)).slice(0, 6).map((c) => `${c.name} ${c.position}(${c.dept}, ${c.phone})`);
-        st.addSms(ctx.situationId!, { nodeId: n2.id, recipients: picks.length ? picks : ["도 재난안전상황실", "산림녹지과", "의성군·안동시 재난담당관"], message: "[경상북도 재대본] 의성 안평면 산불 위기경보 「경계」 격상(14:10). 안동 길안면 방향 확산 우려. 시군 상황실 비상근무 및 주민대피 준비 바랍니다." });
+        const picks = st.contacts.filter((c) => /산림|상황실|소방|기상/.test(`${c.unit} ${c.dept}`)).slice(0, 5);
+        const recips = picks.length ? picks : st.contacts.slice(0, 3);
+        st.addDispatch(ctx.situationId!, {
+          nodeId: n2.id,
+          nodeTitle: n2.data.title,
+          channels: ["sms", "email"],
+          title: "[경상북도 재대본] 의성 안평면 산불 위기경보 「경계」 격상",
+          message: "14:10 상황판단회의 결과 산불 위기경보 「주의」→「경계」 격상. 초속 8m 북서풍으로 안동 길안면 방향 확산 우려.\n· 시군 상황실 비상근무 전환\n· 신안리·석탑리 주민 사전대피 준비\n· 진화헬기 4대 추가 요청\n수신 즉시 확인 후 임무 완료 시 보고 바랍니다.",
+          groupNames: ["재난상황관리반 전원"],
+          recipients: recips.map((r) => ({ contactId: r.id, name: r.name, position: r.position, dept: r.dept, phone: r.phone, email: r.email })),
+        });
         useAppStore.getState().addResource(ctx.situationId!, { nodeId: n2.id, name: "산불진화헬기", category: "장비", qty: 4, unit: "대", source: "internal" });
         useAppStore.getState().addResource(ctx.situationId!, { nodeId: n2.id, name: "진화차", category: "장비", qty: 6, unit: "대", source: "internal" });
         useAppStore.getState().addResource(ctx.situationId!, { nodeId: n2.id, name: "산불전문예방진화대", category: "인력", qty: 40, unit: "명", source: "internal" });
         (n2.data.details ?? []).forEach((_, i) => useAppStore.getState().toggleDetailCheck(ctx.situationId!, n2.id, i, true));
-        await sleep(200);
-        useAppStore.getState().completeNode(ctx.situationId!, n2.id, RESULTS[1]);
+      },
+    },
+    {
+      id: "ack",
+      title: "현장 요원 응답 수신 (모의)",
+      where: "업무 › 실행·조치결과 탭 › 조치 카드 · 타임라인",
+      narration: "현장 요원이 휴대폰에서 링크를 열어 「수신확인」과 「임무완료」를 누르고 조치사항을 입력했습니다. 응답은 상황실 화면의 조치 카드(응답 현황), 실제 수행 타임라인, 상황일지에 시각과 함께 자동 기록됩니다. 시연에서는 3명의 응답을 모의로 수신했습니다.",
+      points: ["수신 n/총 · 완료 n/총 진행 막대와 수신자별 시각", "조치사항은 「확인 필요」 상태로 원장에 들어와 담당자가 확정", "다른 기기 응답은 서버 폴링(4초), 같은 브라우저는 즉시 반영"],
+      tryIt: "QR 을 스캔한 휴대폰에서 직접 「수신확인」을 눌러 화면에 나타나는지 확인해 보세요",
+      href: (c) => `/situations/${c.situationId}?tab=run`,
+      after: (ctx) => selectNode(ctx, 1),
+      run: async (ctx) => {
+        const s = sit(ctx);
+        const d = (s?.dispatches ?? []).slice(-1)[0];
+        if (!s || !d) return;
+        const st = useAppStore.getState();
+        const now = Date.now();
+        const notes = ["신안리 주민 32명 마을회관 대피 완료, 취약계층 2명 차량 지원", "진화헬기 2대 15:20 현장 도착, 방화선 구축 착수", ""];
+        d.recipients.slice(0, 3).forEach((r, i) => {
+          st.applyDispatchAck(s.id, { token: r.token, kind: "received", at: new Date(now - (9 - i * 2) * 60000).toISOString() });
+          if (i < 2) {
+            st.applyDispatchAck(s.id, { token: r.token, kind: "completed", at: new Date(now - (4 - i) * 60000).toISOString() });
+            if (notes[i]) st.applyDispatchAck(s.id, { token: r.token, kind: "note", at: new Date(now - (3 - i) * 60000).toISOString(), note: notes[i] });
+          }
+        });
+        // 조치 2 는 응답 현황을 보여 주기 위해 아직 완료하지 않는다 (다음 단계에서 완료)
       },
     },
     {
@@ -243,6 +279,11 @@ export const WILDFIRE_SCENARIO: DemoScenario = {
         const st = useAppStore.getState();
         st.addLedger(ctx.situationId!, { type: "user", title: "상황 변화 기록", body: "15:20 북서풍 초속 10m 로 강화, 안동시 길안면 방향 확산 가속. 위기경보 「경계」→「심각」 격상 검토. 길안면 3개 마을 추가 대피 준비", source: "user", verify: "confirmed" });
         const nodes = workNodes(ctx);
+        const n2 = nodes[1];
+        if (n2 && useAppStore.getState().situations[ctx.situationId!].runs[n2.id]?.status !== "done") {
+          useAppStore.getState().completeNode(ctx.situationId!, n2.id, RESULTS[1]);
+          await sleep(120);
+        }
         const mids = nodes.slice(2, Math.max(2, nodes.length - 1));
         for (let i = 0; i < mids.length; i++) {
           const n = mids[i];

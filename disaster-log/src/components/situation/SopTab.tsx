@@ -342,6 +342,13 @@ export function NodePanel({ node, nodes, edges, onPatch, onPatchEdge, readOnly }
           <TextInput label="협업기관" value={d.coopAgencies ?? ""} disabled={readOnly} onChange={(e) => setData({ coopAgencies: e.target.value })} />
           <TextArea label="세부행동 (줄바꿈 구분)" size="sm" minHeight={110} disabled={readOnly} value={(d.details ?? []).join("\n")} onChange={(e) => setData({ details: e.target.value.split("\n").filter(Boolean) })} />
           <TextInput label="전파대상 (쉼표 구분)" disabled={readOnly} value={(d.targets ?? []).join(", ")} onChange={(e) => setData({ targets: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) })} />
+          <div>
+            <div className="label mb-[6rem] flex items-center gap-[4rem]">상황전파 채널 <Help text={"실행 중 「상황전파 발송」의 기본 채널입니다. SMS·이메일 모두 모바일 응답 링크가 함께 전달되고, 현장 요원의 수신확인·임무완료가 실행내역에 자동 기록됩니다."} /></div>
+            <div className="flex gap-[12rem]">
+              <DsCheckbox size="sm" label="SMS" disabled={readOnly} checked={(d.channels ?? ["sms"]).includes("sms")} onCheckedChange={(v) => { const cur = new Set(d.channels ?? ["sms"]); if (v) cur.add("sms"); else cur.delete("sms"); setData({ channels: Array.from(cur) as ("sms" | "email")[] }); }} />
+              <DsCheckbox size="sm" label="이메일" disabled={readOnly} checked={(d.channels ?? ["sms"]).includes("email")} onCheckedChange={(v) => { const cur = new Set(d.channels ?? ["sms"]); if (v) cur.add("email"); else cur.delete("email"); setData({ channels: Array.from(cur) as ("sms" | "email")[] }); }} />
+            </div>
+          </div>
           <TextInput label="필요자원 (쉼표 구분)" disabled={readOnly} value={(d.resources ?? []).join(", ")} onChange={(e) => setData({ resources: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) })} />
           <div>
             <div className="label mb-[6rem] flex items-center justify-between">

@@ -10,6 +10,11 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import type {
   Contact,
   ContactInput,
+  Dispatch,
+  DispatchAck,
+  DispatchChannel,
+  DispatchRecipient,
+  SendGroup,
   AlertLevel,
   DisasterType,
   EventType,
@@ -83,6 +88,15 @@ interface AppState {
   deleteContacts(ids: string[]): void;
   /** 엑셀 일괄 업로드. mode=replace 면 기존 목록을 비우고 교체. 반환: 추가/갱신 수 */
   importContacts(list: ContactInput[], mode: "append" | "replace" | "merge"): { added: number; updated: number };
+  /** 주소록 전송그룹 */
+  groups: SendGroup[];
+  addGroup(g: { name: string; description?: string; memberIds: string[] }): string;
+  updateGroup(id: string, patch: Partial<Pick<SendGroup, "name" | "description" | "memberIds">>): void;
+  deleteGroup(id: string): void;
+
+  /** 상황전파 발송(모바일 링크) · 현장 응답 반영 */
+  addDispatch(id: string, input: { nodeId?: string; nodeTitle?: string; channels: DispatchChannel[]; title: string; message: string; recipients: Omit<DispatchRecipient, "token">[]; groupNames?: string[] }): Dispatch;
+  applyDispatchAck(id: string, ack: DispatchAck): boolean;
 
   createSituation(input: NewSituationInput): string;
   updateSituation(id: string, patch: Partial<Situation>, ledger?: { title: string; body?: string; type?: EventType }): void;
@@ -175,6 +189,90 @@ export const useAppStore = create<AppState>()(
         },
         updateContact: (id, patch) => set((st) => ({ contacts: st.contacts.map((c) => (c.id === id ? { ...c, ...patch, updatedAt: nowIso() } : c)) })),
         deleteContacts: (ids) => set((st) => ({ contacts: st.contacts.filter((c) => !ids.includes(c.id)) })),
+        groups: [],
+        addGroup: (g) => {
+          const id = uid("grp-");
+          const now = nowIso();
+          set((st) => ({ groups: [...st.groups, { ...g, id, createdAt: now, updatedAt: now }] }));
+          return id;
+        },
+        updateGroup: (id, patch) => set((st) => ({ groups: st.groups.map((g) => (g.id === id ? { ...g, ...patch, updatedAt: nowIso() } : g)) })),
+        deleteGroup: (id) => set((st) => ({ groups: st.groups.filter((g) => g.id !== id) })),
+
+        addDispatch: (id, input) => {
+          const now = nowIso();
+          const rec: Dispatch = {
+            id: uid("dsp-"),
+            nodeId: input.nodeId,
+            nodeTitle: input.nodeTitle,
+            channels: input.channels.length ? input.channels : ["sms"],
+            title: input.title,
+            message: input.message,
+            sentAt: now,
+            sentBy: get().user.name,
+            groupNames: input.groupNames,
+            recipients: input.recipients.map((r) => ({ ...r, token: uid("").slice(0, 10) })),
+            result: "success",
+          };
+          const names = rec.recipients.map((r) => `${r.name}${r.position ? " " + r.position : ""}${r.dept ? "(" + r.dept + ")" : ""}`);
+          const label = names.slice(0, 3).join(", ") + (names.length > 3 ? ` 외 ${names.length - 3}명` : "");
+          patchSit(id, (s) => ({
+            dispatches: [...(s.dispatches ?? []), rec],
+            // 결과보고 SMS 발송이력 표와 호환 — SMS 채널 포함 시 SmsRecord 도 남긴다
+            sms: rec.channels.includes("sms") ? [...s.sms, { id: uid("sms-"), at: now, nodeId: input.nodeId, recipients: names, message: `${input.title} — ${input.message}`, result: "success" as const }] : s.sms,
+            ledger: [...s.ledger, ledgerEv({ type: "sms", title: `상황전파 발송(${rec.channels.map((c) => (c === "sms" ? "SMS" : "이메일")).join("·")}) → ${label}`, body: `${input.title}
+${input.message}`, source: "sms", verify: "confirmed", refId: input.nodeId })],
+          }));
+          return rec;
+        },
+
+        applyDispatchAck: (id, ack) => {
+          let applied = false;
+          patchSit(id, (s) => {
+            const dispatches = s.dispatches ?? [];
+            const di = dispatches.findIndex((d) => d.recipients.some((r) => r.token === ack.token));
+            if (di < 0) return;
+            const d = dispatches[di];
+            const ri = d.recipients.findIndex((r) => r.token === ack.token);
+            const r = d.recipients[ri];
+            // 중복 응답 무시
+            if (ack.kind === "received" && r.receivedAt) return;
+            if (ack.kind === "completed" && r.completedAt) return;
+            if (ack.kind === "note" && r.note === (ack.note ?? "") ) return;
+            const nr: DispatchRecipient = { ...r };
+            const who = `${r.name}${r.position ? " " + r.position : ""}${r.dept ? " · " + r.dept : ""}`;
+            const evs: LedgerEvent[] = [];
+            if (ack.kind === "received") {
+              nr.receivedAt = ack.at;
+              evs.push(ledgerEv({ type: "mission", at: ack.at, title: `수신확인: ${who}`, body: `${d.nodeTitle ?? d.title} · 모바일 상황전파`, source: "sms", verify: "confirmed", refId: d.nodeId, actor: r.name }));
+            } else if (ack.kind === "completed") {
+              nr.completedAt = ack.at;
+              if (!nr.receivedAt) nr.receivedAt = ack.at;
+              evs.push(ledgerEv({ type: "mission", at: ack.at, title: `임무완료: ${who}`, body: `${d.nodeTitle ?? d.title} · 모바일 상황전파`, source: "sms", verify: "confirmed", refId: d.nodeId, actor: r.name }));
+            } else {
+              nr.note = ack.note ?? "";
+              nr.noteAt = ack.at;
+              if (nr.note) evs.push(ledgerEv({ type: "result", at: ack.at, title: `현장 조치사항: ${who}`, body: nr.note, source: "user", verify: "unverified", refId: d.nodeId, actor: r.name }));
+            }
+            applied = true;
+            const nd: Dispatch = { ...d, recipients: d.recipients.map((x, i) => (i === ri ? nr : x)) };
+            const nds = dispatches.map((x, i) => (i === di ? nd : x));
+            // 노드 실행 기록에도 반영 (첫 수신 → received, 전원 완료 → completed)
+            let runs = s.runs;
+            if (d.nodeId) {
+              const run = s.runs[d.nodeId] ?? { nodeId: d.nodeId, status: "pending" as const };
+              const allDone = nd.recipients.every((x) => x.completedAt);
+              const ackPatch = { ...(run.missionAck ?? {}) };
+              if (ack.kind !== "note" && !ackPatch.received) ackPatch.received = ack.at;
+              if (allDone && !ackPatch.completed) ackPatch.completed = ack.at;
+              ackPatch.by = ackPatch.by ?? r.name;
+              runs = { ...s.runs, [d.nodeId]: { ...run, missionAck: ackPatch } };
+            }
+            return { dispatches: nds, runs, ledger: [...s.ledger, ...evs] };
+          });
+          return applied;
+        },
+
         importContacts: (list, mode) => {
           const now = nowIso();
           const norm = (v: string) => v.replace(/[^0-9]/g, "");
@@ -226,6 +324,7 @@ export const useAppStore = create<AppState>()(
             runs: {},
             running: false,
             sms: [],
+            dispatches: [],
             resources: [],
             ledger: [],
             log: { ...emptyLog(), templateId: input.mode === "training" ? "log-training-std" : "log-actual-std" },
@@ -592,7 +691,7 @@ export const useAppStore = create<AppState>()(
     {
       name: "disaster-log-store-v1",
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ user: s.user, situations: s.situations, order: s.order, templates: s.templates, templateOrder: s.templateOrder, contacts: s.contacts }),
+      partialize: (s) => ({ user: s.user, situations: s.situations, order: s.order, templates: s.templates, templateOrder: s.templateOrder, contacts: s.contacts, groups: s.groups }),
     },
   ),
 );

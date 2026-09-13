@@ -116,6 +116,7 @@ export const IconFullScreenClose = wrap(DS.IconFullScreenClose);
 export const IconMore = wrap(DS.IconMoreVertical);
 export const IconClick = wrap(DS.IconClick);
 export const IconTag = wrap(DS.IconTag);
+export const IconOpenNew = wrap(DS.IconOpenNewTab);
 
 /** DS 배포판(0.46.1)에 없는 아이콘 — lucide 대체 (SOP 노드 아이콘은 DS 차기 버전 IconNode* 로 교체 예정) */
 type LucideIcon = ComponentType<{ size?: number; className?: string }>;

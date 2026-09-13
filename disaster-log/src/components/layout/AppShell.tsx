@@ -82,6 +82,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // 디자인시스템 오버레이(Toast/Modal/Select)는 document 에 포털을 붙이므로 클라이언트 마운트 후에만 렌더
   if (!hydrated) return <div className="min-h-screen bg-[var(--color-bg-subtle)]" />;
+  // 현장 요원 모바일 페이지(/m/…)는 헤더·LNB 없이 단순 화면만
+  if (pathname?.startsWith("/m/")) return <ToastProvider>{children}</ToastProvider>;
 
   return (
     <ToastProvider>
