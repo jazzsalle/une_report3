@@ -17,8 +17,9 @@ const g = globalThis as unknown as { __dispatchMem?: Mem };
 const mem: Mem = g.__dispatchMem ?? { payloads: new Map(), acks: new Map(), tokenSit: new Map() };
 g.__dispatchMem = mem;
 
-const url = process.env.UPSTASH_REDIS_REST_URL;
-const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+// Upstash 콘솔(UPSTASH_*) 또는 Vercel 마켓플레이스 연동(KV_* 별칭) 어느 이름으로 주입되어도 인식
+const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 export const backend: "upstash" | "memory" = url && token ? "upstash" : "memory";
 
 async function redis<T = unknown>(cmd: (string | number)[]): Promise<T> {
