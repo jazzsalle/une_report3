@@ -6,8 +6,11 @@ from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 
 sys.stdout.reconfigure(encoding="utf-8")
-OUT = r"D:\vibecoding\report3\plan\재난대응_복구_상세기능요구사항정의서_v0.7.xlsx"
-SRC = r"......plan_이전버전eq_v06.json"  # 원본 v0.6 행 JSON (아래 참고)
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[3]  # 저장소 루트 (une_report3)
+OUT = str(ROOT / "plan" / "재난대응_복구_상세기능요구사항정의서_v0.7.xlsx")
+SRC = str(ROOT / "plan" / "_이전버전" / "req_v06.json")  # 원본 v0.6 행 JSON
+eq_v06.json"  # 원본 v0.6 행 JSON (아래 참고)
 DATE = "2026-09-14"
 
 # ── 서식 (exel style.xlsx) ──
