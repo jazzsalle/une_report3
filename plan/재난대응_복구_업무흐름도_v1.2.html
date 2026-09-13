@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>재난대응·복구 업무흐름도 v1.2 (개발 반영본)</title>
+<style>
+:root{
+  --bg:#f5f7fa;--card:#fff;--ink:#172033;--sub:#677285;--line:#dbe2ea;
+  --navy:#163a67;--blue:#2f6feb;--blue2:#edf3ff;--green:#198754;--green2:#edf8f2;
+  --amber:#a66d12;--amber2:#fff7e7;--purple:#7057d7;--purple2:#f2efff;
+  --red:#c3473c;--red2:#fff0ef;--teal:#0f766e;--teal2:#e6f7f5;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif;color:var(--ink)}
+.wrap{max-width:1560px;margin:auto;padding:22px}
+.hero{background:linear-gradient(135deg,#153961,#2b6399);border-radius:20px;padding:24px 28px;color:white;box-shadow:0 15px 38px rgba(34,70,112,.16)}
+.hero h1{margin:0 0 8px;font-size:29px}
+.hero p{margin:0;color:#e9eff7;font-size:14px;line-height:1.58}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+.badge{font-size:11px;font-weight:800;border:1px solid rgba(255,255,255,.3);padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.1)}
+.badge.new{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.55)}
+.panel{margin-top:15px;background:white;border:1px solid var(--line);border-radius:18px;padding:19px;box-shadow:0 7px 22px rgba(30,42,60,.045)}
+.panel h2{font-size:18px;margin:0 0 13px}
+.overview{display:grid;grid-template-columns:repeat(9,1fr);gap:9px}
+.ov{position:relative;border:1px solid var(--line);border-radius:13px;background:#fff;padding:12px;min-height:140px}
+.ov.new{border-color:#bfe3cc;background:#f9fffb}
+.ov:not(:last-child):after{content:"→";position:absolute;right:-14px;top:50%;transform:translateY(-50%);font-weight:900;color:#9ba7b4;z-index:5}
+.ov .n{font-size:10px;font-weight:900;color:var(--blue)}
+.ov b{display:block;font-size:12.5px;margin:6px 0}
+.ov span{font-size:10px;color:var(--sub);line-height:1.45}
+.ov .scr{display:block;margin-top:6px;font-size:9px;color:#2857a6;font-weight:800}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+.lg{padding:5px 8px;border-radius:8px;font-size:10px;font-weight:800}
+.user{background:#f1f4f8;color:#536174}.une{background:var(--blue2);color:#2857a6}.t3q{background:var(--purple2);color:var(--purple)}.ext{background:var(--amber2);color:var(--amber)}.data{background:var(--green2);color:var(--green)}.uni{background:var(--teal2);color:var(--teal)}.mob{background:var(--red2);color:var(--red)}
+.flowblock{border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:12px}
+.flowblock.new{border-color:#bfe3cc}
+.block-title{padding:11px 14px;background:#f7f9fc;border-bottom:1px solid var(--line);font-size:13px;font-weight:900}
+.flowblock.new .block-title{background:#f1faf4}
+.lane-row{display:grid;grid-template-columns:125px 1fr;border-bottom:1px solid var(--line)}
+.lane-row:last-child{border-bottom:0}
+.lane-name{background:#fafbfc;padding:12px;font-size:11px;font-weight:900;border-right:1px solid var(--line)}
+.lane-body{padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.node{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;font-size:10.5px;line-height:1.35;min-width:118px;max-width:330px}
+.node strong{display:block;font-size:11px;margin-bottom:2px}
+.node.usern{background:#f6f8fa}.node.unen{background:#f3f7ff;border-color:#cfe0ff}.node.t3qn{background:#f8f5ff;border-color:#dfd6ff}.node.extn{background:#fffaf0;border-color:#eeddb4}.node.datan{background:#f1f9f5;border-color:#ccead9}.node.unin{background:#effaf8;border-color:#b9e5df}.node.mobn{background:#fff5f4;border-color:#f0c9c5}
+.node small{display:block;margin-top:3px;font-size:9px;color:#7c8796;font-weight:800}
+.arrow{font-size:16px;font-weight:900;color:#9da8b4}
+.decision{width:92px;height:92px;transform:rotate(45deg);border:1px solid #e0c77f;background:#fff8e5;display:flex;align-items:center;justify-content:center;margin:7px 20px}
+.decision span{transform:rotate(-45deg);font-size:10px;font-weight:900;text-align:center;line-height:1.25}
+.branch{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.branch .yes,.branch .no,.branch .opt{font-size:9px;font-weight:900;padding:4px 6px;border-radius:6px}
+.yes{background:var(--green2);color:var(--green)}.no{background:var(--red2);color:var(--red)}.opt{background:var(--blue2);color:#2857a6}
+.subgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.box{border:1px solid var(--line);border-radius:13px;padding:13px}
+.box h4{margin:0 0 7px;font-size:12px}
+.box p,.box li{font-size:10.5px;color:var(--sub);line-height:1.5}
+.box ul{margin:7px 0 0 17px;padding:0}
+.rules{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.rule{border:1px solid var(--line);border-radius:13px;padding:13px}
+.rule b{font-size:12px;display:block;margin-bottom:6px}
+.rule span{font-size:10.5px;color:var(--sub);line-height:1.48}
+.st{display:inline-block;font-size:9px;font-weight:900;padding:3px 6px;border-radius:6px;vertical-align:middle}
+.st.ok{background:var(--green2);color:var(--green)}.st.part{background:var(--amber2);color:var(--amber)}.st.mock{background:#f1f4f8;color:#536174}.st.plan{background:var(--red2);color:var(--red)}
+table.map{width:100%;border-collapse:collapse;font-size:10.5px}
+table.map th{background:#f7f9fc;text-align:left;padding:8px;border-bottom:1px solid var(--line);color:#5d6979}
+table.map td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top;color:#465366}
+.footer{font-size:10.5px;color:#7c8796;margin:13px 2px}
+@media(max-width:1180px){.overview{grid-template-columns:repeat(3,1fr)}.ov:not(:last-child):after{display:none}.subgrid,.rules{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){.wrap{padding:10px}.overview,.subgrid,.rules{grid-template-columns:1fr}.lane-row{grid-template-columns:1fr}.lane-name{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>재난대응·복구 업무흐름도 v1.2 <span style="font-size:15px;font-weight:600;opacity:.85">— 개발 반영본</span></h1>
+    <p>기존 UNE 디지털 SOP 자동생성·편집·실행 모듈을 재사용하고 실제재난과 안전한국훈련을 하나의 공통 Core 로 처리하는 상세 업무흐름입니다. v1.2 는 프로토타입(재난상황일지 생성도구) 개발 결과를 반영해 각 노드에 구현 화면·모듈을 적고, <b>사전 준비(SOP 라이브러리·조직·연락처·전송그룹)</b>, <b>상황전파 → 현장 모바일 응답 → 상황실 반영</b>, <b>UNI RAG 연계</b>, <b>시연모드</b> 흐름을 추가했습니다.</p>
+    <div class="badges">
+      <span class="badge">상세 순서도형</span>
+      <span class="badge">문서 선택 → 조치 상세 수신 → 조치 선택 → UNE 기본 Flow 구성</span>
+      <span class="badge">UNE 기존 SOP 모듈 재사용</span>
+      <span class="badge new">SOP 라이브러리 배포·즉시 실행</span>
+      <span class="badge new">조직·연락처(재대본 편성) · 전송그룹</span>
+      <span class="badge new">상황전파 SMS·이메일 → 모바일 응답 → 자동 반영</span>
+      <span class="badge new">UNI RAG · 대체 생성</span>
+      <span class="badge">KRMS 연계 자리 확보</span>
+      <span class="badge">안전한국훈련 모드 포함</span><span class="badge">부산 풍수해 = 1차 Seed · 경북 산불 = 시연</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>1. 전체 업무흐름 — 사용자 관점</h2>
+    <div class="overview">
+      <div class="ov new"><div class="n">00</div><b>사전 준비</b><span>SOP 라이브러리 작성·게시<br>조직·연락처 엑셀 업로드<br>전송그룹 등록</span><i class="scr">/sops · /settings/org</i></div>
+      <div class="ov"><div class="n">01</div><b>업무 시작</b><span>실제재난: 재난상황 등록<br>안전한국훈련: 훈련 개요·상황부여</span><i class="scr">/situations/new</i></div>
+      <div class="ov"><div class="n">02</div><b>상황정보 확인</b><span>기상특보 열람(Seed)<br>기상요약(T3Q Mock·확인 필요)</span><i class="scr">상황·기상 탭</i></div>
+      <div class="ov"><div class="n">03</div><b>관련 문서 조회</b><span>파일명 목록 추천(T3Q Mock)<br>사용자가 적용 문서 선택</span><i class="scr">문서·조치 선택 탭</i></div>
+      <div class="ov"><div class="n">04</div><b>대응조치 전체 수신</b><span>선택 문서 기준 조치목록+상세를<br>한 번에 수신·보관</span><i class="scr">문서·조치 선택 탭</i></div>
+      <div class="ov"><div class="n">05</div><b>조치 선택·순서확정</b><span>체크·위/아래 정렬<br>→ 선택 조치로 SOP 구성</span><i class="scr">문서·조치 선택 탭</i></div>
+      <div class="ov"><div class="n">06</div><b>SOP 구성·실행</b><span>기본 Flow 자동구성 / 라이브러리 배포 / AI 생성<br>편집·실행본 확정 → 실행·세부행동 체크·상황전파·응답</span><i class="scr">SOP 구성·편집 · 실행·조치결과 탭</i></div>
+      <div class="ov"><div class="n">07</div><b>상황일지</b><span>실행·전파·응답·자원·조치결과 원장 자동 누적<br>UNI 초안 → Markdown 편집·확정</span><i class="scr">상황일지 탭</i></div>
+      <div class="ov"><div class="n">08</div><b>결과보고</b><span>공통 목차 편집·자료 선택·UNI 초안<br>HWPX·DOCX·PDF 출력</span><i class="scr">결과보고 탭</i></div>
+    </div>
+    <div class="legend">
+      <span class="lg user">사용자(상황실)</span><span class="lg mob">현장 요원(모바일)</span><span class="lg une">UNE</span><span class="lg uni">UNI RAG</span><span class="lg t3q">T3Q(Mock)</span><span class="lg ext">외부연계</span><span class="lg data">저장·이력</span>
+      <span class="st ok">구현</span><span class="st part">부분</span><span class="st mock">모의</span><span class="st plan">계획</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>2. 상세 순서도 — 0. 사전 준비 (상황과 독립) <span class="st ok">구현</span></h2>
+    <div class="flowblock new">
+      <div class="block-title">0-1. SOP 라이브러리 — 편집(초안·게시)과 실행(배포 스냅샷)의 분리</div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body">
+        <div class="node usern"><strong>새 SOP 만들기</strong>빈 캔버스 / 매뉴얼 조치로 구성 / AI 생성 중 선택 · 이름·재난유형·태그</div><span class="arrow">→</span>
+        <div class="node usern"><strong>초안 편집</strong>노드·연결·상황판단·채널·하위 임무 (속성 패널 접기·폭 조절)</div><span class="arrow">→</span>
+        <div class="node usern"><strong>게시</strong>실행 가능 버전 v1..n 확정 (게시 메모)</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>SopTemplate</strong>draft / published(version) / history / usage<small>/sops · /sops/[id] · createTemplate·publishTemplate</small></div><span class="arrow">→</span>
+        <div class="node unen"><strong>목록 관리</strong>검색·재난유형 필터·복제·삭제·JSON 내보내기/가져오기·기본 SOP 불러오기(3종)</div><span class="arrow">→</span>
+        <div class="node datan"><strong>상황에서 선택 시</strong>deployTemplate: 스냅샷 복사 → SopVersion(confirmed, templateId/version) → 즉시 실행 가능</div>
+      </div></div>
+    </div>
+    <div class="flowblock new">
+      <div class="block-title">0-2. 조직·연락처 (부산 풍수해 매뉴얼 재난안전대책본부 편성 기준) · 전송그룹</div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body">
+        <div class="node usern"><strong>엑셀 양식 다운로드</strong>구분 · 실무반/기관 · 부서명 · 직위 · 이름 · 전화번호 · 이메일 · 비고 (+작성안내 시트)</div><span class="arrow">→</span>
+        <div class="node usern"><strong>작성 후 일괄 업로드</strong>.xlsx/.xls/.csv</div><span class="arrow">→</span>
+        <div class="node usern"><strong>미리보기 확인</strong>오류 행 제외 · 구분 추정 경고 · 추가/병합/전체교체 선택</div><span class="arrow">→</span>
+        <div class="node usern"><strong>전송그룹 만들기</strong>조직도에서 부서·실무반 단위 체크 또는 검색</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>파서(SheetJS)</strong>헤더 별칭 인식(부서/소속·직급·성명·연락처…) · 병합셀 이어받기 · 전화번호 정규화 · 중복 경고<small>lib/org/excel.ts</small></div><span class="arrow">→</span>
+        <div class="node datan"><strong>Contact 3계층</strong>구분(지휘부 · 13개 협업기능별 실무반 · 유관기관) → 실무반·기관 → 부서 → 사람</div><span class="arrow">+</span>
+        <div class="node datan"><strong>SendGroup</strong>이름·설명·구성원 (기본 5개 Seed)</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">원칙</div><div class="lane-body">
+        <div class="node extn"><strong>주관·지원·협업 부서는 조직 속성이 아님</strong>조치(행동요령)별 역할 → SOP 노드(leadDept/supportDept/coopAgencies)에 기록 → 상황전파 시 「조치 담당 추천」으로 해당 부서 인원 자동 제시</div>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>3. 상세 순서도 — A. 실제재난 / 안전한국훈련 시작 및 Context 구성 <span class="st ok">구현</span></h2>
+    <div class="flowblock">
+      <div class="block-title">A-1. 공통 시작점에서 실제재난과 안전한국훈련을 분기</div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body">
+        <div class="node usern"><strong>새 업무 시작</strong>실제재난 / 안전한국훈련 선택</div><span class="arrow">→</span>
+        <div class="decision"><span>업무 유형?</span></div>
+        <div class="branch"><span class="yes">실제재난</span><div class="node usern">지자체·재난유형(호우/태풍/대설/산불)·기준시각·발생/영향지역(복수) + 현재상황(선택)</div></div>
+        <div class="branch"><span class="no">안전한국훈련</span><div class="node usern">훈련명·목적·시나리오·참여기관·일정 + 대상지역·재난유형</div></div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>업무 세션 생성</strong>situation_id / mode / 사용자 / 생성시각<small>createSituation · 원장 situation 이벤트</small></div><span class="arrow">→</span>
+        <div class="node unen"><strong>Context 구성</strong>공통 Context + 실제/훈련 전용 Context → 문서·조치 조회 및 AI 초안(buildContext)</div><span class="arrow">→</span>
+        <div class="node datan"><strong>저장</strong>브라우저 localStorage(zustand persist) · 설정 › JSON 백업/복원 · 대시보드·LNB 최근 업무</div>
+      </div></div>
+    </div>
+    <div class="flowblock">
+      <div class="block-title">A-2. 실제재난 모드</div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>기상특보 표시</strong>발표시각·출처 열람용</div><span class="arrow">→</span>
+        <div class="node unen"><strong>Query Context</strong>지자체 + 재난유형 + 지역 + 현재상황(선택)</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">T3Q / 외부</div><div class="lane-body">
+        <div class="node t3qn"><strong>기상요약 (Mock)</strong>weatherSummary → 「확인 필요」 표시 <span class="st mock">모의</span></div><span class="arrow">+</span>
+        <div class="node extn"><strong>기상특보 API</strong>현재 Seed(mockWeatherAlerts) · 실 API 연계 자리 <span class="st mock">모의</span></div>
+      </div></div>
+    </div>
+    <div class="flowblock">
+      <div class="block-title">A-3. 안전한국훈련 모드</div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body">
+        <div class="node usern"><strong>훈련 개요 설정</strong>목적·시나리오·참여기관·일정</div><span class="arrow">→</span>
+        <div class="node usern"><strong>상황부여 등록</strong>시각·메시지·대상 (상황·기상·상황부여 탭)</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>훈련 Context</strong>훈련계획 + 시나리오 + 상황부여 + 지역/재난유형</div><span class="arrow">→</span>
+        <div class="node datan"><strong>원장 injection 이벤트</strong>상황부여를 시간순 누적</div>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>4. 상세 순서도 — B. 문서 선택 → 조치 상세 수신 → 조치 선택 → SOP 구성 (3경로) → 편집·확정</h2>
+    <div class="flowblock">
+      <div class="block-title">B-1. 문서 파일명 목록 → 선택 <span class="st mock">T3Q Mock</span></div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body"><div class="node usern"><strong>관련 문서 조회</strong></div><span class="arrow">→</span><div class="node usern"><strong>문서 선택</strong>체크박스(파일명만)</div><span class="arrow">→</span><div class="node usern"><strong>선택 문서로 조치 상세 일괄 수신</strong></div></div></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body"><div class="node unen"><strong>문서조회 요청</strong>상황 Context 전달 → mockT3Q.searchDocuments</div><span class="arrow">→</span><div class="node unen"><strong>선택 문서 저장</strong>toggleDoc · 원장 document 이벤트</div></div></div>
+      <div class="lane-row"><div class="lane-name">T3Q (Mock)</div><div class="lane-body"><div class="node t3qn"><strong>Seed 문서 메타 매칭</strong>부산 풍수해 매뉴얼·하천 안전·대피명령·산불 실무매뉴얼·훈련 가이드 → 파일명 목록</div></div></div>
+    </div>
+    <div class="flowblock">
+      <div class="block-title">B-2. 조치 목록 + 상세정보 일괄 수신 → 선택·정렬 <span class="st mock">T3Q Mock</span> <span class="st ok">UI 구현</span></div>
+      <div class="lane-row"><div class="lane-name">T3Q (Mock)</div><div class="lane-body"><div class="node t3qn"><strong>조치 상세 일괄 반환</strong>코드/조치명/단계/주관·지원·협업/세부행동/전파대상/필요자원/출처문서·페이지<small>풍수해 113 · 산불 10 카드</small></div><span class="arrow">→</span><div class="node extn"><strong>요구하지 않음</strong>필수/선택 · 선행/후행 · 분기조건 · 다음조치 · UI 좌표</div></div></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body"><div class="node unen"><strong>응답 보관</strong>recommendedActions</div><span class="arrow">→</span><div class="node unen"><strong>조치 카드 표시</strong>요약(단계·담당) · 펼치면 세부행동</div></div></div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body"><div class="node usern"><strong>조치 선택</strong>체크/해제</div><span class="arrow">→</span><div class="node usern"><strong>순서 조정</strong>위/아래</div><span class="arrow">→</span><div class="node usern"><strong>선택 조치로 SOP 구성</strong>외부 재호출 없음</div></div></div>
+    </div>
+    <div class="flowblock">
+      <div class="block-title">B-3. SOP 준비 3경로 — 기본 Flow 자동구성 / 라이브러리 배포 / AI 자유생성</div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body">
+        <div class="decision"><span>SOP 준비 방법?</span></div>
+        <div class="branch"><span class="opt">① 라이브러리</span><div class="node usern">게시 SOP 선택 → 배포(+즉시 실행) <span class="st ok">구현</span></div></div>
+        <div class="branch"><span class="opt">② 문서·조치</span><div class="node usern">선택 조치로 기본 순차 Flow <span class="st ok">구현</span></div></div>
+        <div class="branch"><span class="opt">③ AI</span><div class="node usern">자연어로 상황 설명 <span class="st part">부분</span></div></div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNE 기존 SOP 모듈</div><div class="lane-body">
+        <div class="node unen"><strong>SOP Autogen Adapter</strong>actionsToCompns: 조치 상세 → CompnSaveParams(CompnTyCode 104001 시작·104002 프로세스·104003 전파·104004 자원·104006 종료 · SubMission DffTyCode)</div><span class="arrow">→</span>
+        <div class="node unen"><strong>compnsToFlow</strong>기본 Process 노드 생성 · 선택 순서대로 순차 연결 · 노드 상세 자동입력 · 자동 배치</div><span class="arrow">→</span>
+        <div class="node datan"><strong>SopVersion(추천 원본)</strong>+ 라이브러리 초안 동시 저장</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNI RAG</div><div class="lane-body">
+        <div class="node unin"><strong>POST /chat/json (SSE)</strong>__status__(searching/reranking/generating) → __compn__(컴포넌트 단위) → __done__<small>/api/uni/sop 릴레이 · 로그인 토큰 캐시 · /models 로 모델 선택</small></div><span class="arrow">→</span>
+        <div class="node unen"><strong>toNode/toEdges</strong>캔버스 실시간 반영 · 실행 중 상황이면 활성 실행본 보호</div>
+        <div class="branch"><span class="no">접속 불가</span><div class="node extn">circuit breaker(60초) → Seed 기반 대체 생성 · 출처 fallback 표시</div></div>
+      </div></div>
+    </div>
+    <div class="flowblock">
+      <div class="block-title">B-4. 편집 → 실행본 확정 <span class="st ok">구현</span></div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body">
+        <div class="node usern"><strong>Flow 편집</strong>프로세스·상황판단·상황전파·자원 노드 추가 · 연결 · 삭제 (ReactFlow)</div><span class="arrow">→</span>
+        <div class="node usern"><strong>노드 속성 편집</strong>담당·지원·협업 · 세부행동 · 전파대상 · 필요자원 · <b>상황전파 채널(SMS·이메일)</b> · 하위 임무 · 분기값/연결대상</div><span class="arrow">→</span>
+        <div class="node usern"><strong>속성 패널 UX</strong>숨기기/열기 · 가장자리 드래그 폭 조절(280~720px)</div><span class="arrow">→</span>
+        <div class="node datan"><strong>실행본 확정</strong>confirmSop → SopVersion(confirmed) · 버전 이력 · 라이브러리에 저장/반영 가능</div>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>5. 상세 순서도 — C. SOP 실행 · 세부행동 체크 · 조치결과 · 상황전파 → 현장 응답</h2>
+    <div class="flowblock">
+      <div class="block-title">C-1. 실행 시작·모니터링 <span class="st ok">구현</span></div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body">
+        <div class="node usern"><strong>실행 시작</strong>확인 모달(SOP·조치 수·첫 조치·담당·시각)</div><span class="arrow">→</span>
+        <div class="node unen"><strong>안내창 「SOP 실행이 시작되었습니다」</strong>진행 중 조치 · 처리 방법 3단계</div><span class="arrow">→</span>
+        <div class="node usern"><strong>조치 선택</strong>좌측 목록 또는 플로우 보기(실행 상태·현재 조치 강조) 클릭</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>startRun</strong>시작 노드 자동 완료 → 첫 조치 running · currentNodeId</div><span class="arrow">→</span>
+        <div class="node unen"><strong>completeNode</strong>다음 노드 자동 진행 · 상황판단은 분기값(edge label) 경로 · 종료 노드 도달 시 running=false</div><span class="arrow">→</span>
+        <div class="node unen"><strong>안내창 「SOP 실행이 완료되었습니다」</strong>완료·생략·SMS·자원 요약 → 상황일지로</div>
+        <div class="branch"><span class="opt">중지</span><div class="node unen">확인 모달 → stopRun → 「실행 재개」</div></div>
+      </div></div>
+    </div>
+    <div class="flowblock">
+      <div class="block-title">C-2. 조치 카드 — 노드 유형별 처리 <span class="st ok">구현</span></div>
+      <div class="lane-row"><div class="lane-name">사용자</div><div class="lane-body">
+        <div class="decision"><span>노드 유형?</span></div>
+        <div class="node usern"><strong>프로세스·상황전파</strong><b>세부행동 체크</b>(체크 시각 기록·진행률) + 실제 담당자 + 현장메모 + 조치결과(비우면 체크 항목 자동 정리) + 증빙 + <b>상황전파 발송</b> + 자원 투입 → 완료/생략</div>
+        <div class="node usern"><strong>상황판단</strong>분기값 ChoiceChip 선택 → 분기 확정 · 연결대상으로 진행</div>
+        <div class="node usern"><strong>자원</strong>수기 / 내부 자원목록(재난유형별) / KRMS(비활성 자리) → 투입·회수</div>
+        <div class="node usern"><strong>훈련</strong>임무 수신·확인·완료 버튼 (모바일 응답과 공용 missionAck)</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNE 이력</div><div class="lane-body">
+        <div class="node datan">NodeRun 상태·시작/완료·담당·checks</div><span class="arrow">+</span>
+        <div class="node datan">원장 run(세부행동 수행·조치 시작/완료)·result·memo·branch</div><span class="arrow">+</span>
+        <div class="node datan">Dispatch·SmsRecord</div><span class="arrow">+</span>
+        <div class="node datan">ResourceRecord 투입·회수</div><span class="arrow">+</span>
+        <div class="node datan">missionAck(훈련·현장 응답)</div>
+      </div></div>
+    </div>
+    <div class="flowblock new">
+      <div class="block-title">C-3. 상황전파 발송 → 현장 요원 모바일 응답 → 상황실 자동 반영 <span class="st ok">구현</span> <span class="st mock">실발송 모의</span></div>
+      <div class="lane-row"><div class="lane-name">사용자(상황실)</div><div class="lane-body">
+        <div class="node usern"><strong>상황전파 발송 열기</strong>조치 카드 「상황전파 발송」</div><span class="arrow">→</span>
+        <div class="node usern"><strong>채널·제목·내용</strong>SMS·이메일(노드 기본값) · 제목 · 내용</div><span class="arrow">→</span>
+        <div class="node usern"><strong>수신자 선택</strong>조치 담당 추천(주관·지원·협업 부서) / 조직도(사람·부서·실무반 체크) / 전송그룹 / 검색</div><span class="arrow">→</span>
+        <div class="node usern"><strong>모바일 미리보기 확인</strong>휴대폰 프레임</div><span class="arrow">→</span>
+        <div class="node usern"><strong>발송</strong></div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>addDispatch</strong>수신자별 토큰 · Dispatch(채널·제목·내용) · SmsRecord(호환) · 원장 sms 이벤트</div><span class="arrow">→</span>
+        <div class="node unen"><strong>링크 생성</strong>/m/{token}?p=payload(base64url: 상황·조치·내용·수신자) — 서버 없이도 열림</div><span class="arrow">→</span>
+        <div class="node unen"><strong>QR·SMS 문안</strong>수신자별 QR(qrcode) · 문안 = 제목+앞 60자+링크 · 「모의 수신」</div><span class="arrow">→</span>
+        <div class="node datan"><strong>/api/dispatch 등록</strong>토큰→payload · 상황 매핑</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">외부 연계</div><div class="lane-body">
+        <div class="node extn"><strong>UNE SMS 모듈 · 메일 서버</strong>실발송 자리 (현재 모의) · URL 단축 병행 권장 <span class="st mock">모의</span></div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">현장 요원(모바일)</div><div class="lane-body">
+        <div class="node mobn"><strong>링크/QR 열기</strong>인증 없음 · 상황 · 조치 · 내용 · 수신자만 표시 · 반응형(갤럭시+크롬 기준)</div><span class="arrow">→</span>
+        <div class="node mobn"><strong>① 수신확인</strong></div><span class="arrow">→</span>
+        <div class="node mobn"><strong>② 임무완료</strong></div><span class="arrow">→</span>
+        <div class="node mobn"><strong>③ 조치사항(선택) 보내기</strong></div>
+        <div class="node datan"><strong>기기 보관</strong>localStorage(새로고침 후 유지)</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">서버 저장소</div><div class="lane-body">
+        <div class="node unen"><strong>POST /api/dispatch/{token}</strong>kind(received/completed/note)·시각·조치사항</div><span class="arrow">→</span>
+        <div class="node extn"><strong>Upstash Redis(REST)</strong>Vercel 마켓플레이스 연동 · 7일 보관 · 미설정 시 프로세스 메모리</div><span class="arrow">→</span>
+        <div class="node unen"><strong>GET /api/dispatch/pull</strong>상황별 응답 목록(since)</div>
+        <div class="node unen"><strong>BroadcastChannel</strong>같은 브라우저(시연)는 즉시 전달</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">상황실 반영</div><div class="lane-body">
+        <div class="node unen"><strong>useDispatchSync</strong>미완료 수신자 있을 때 4초 폴링</div><span class="arrow">→</span>
+        <div class="node unen"><strong>applyDispatchAck</strong>중복 무시 · 수신자 상태 갱신</div><span class="arrow">→</span>
+        <div class="node datan">조치 카드 「상황전파 응답 현황」 수신 n/총 · 완료 n/총 · 시각 · 조치사항</div><span class="arrow">+</span>
+        <div class="node datan">타임라인 · 원장 mission(수신확인·임무완료) · result(현장 조치사항, 확인 필요)</div><span class="arrow">+</span>
+        <div class="node datan">NodeRun.missionAck · 결과보고 붙임 1-1</div>
+      </div></div>
+    </div>
+    <div class="flowblock">
+      <div class="block-title">C-4. 상황 변화 · 종료 판단 <span class="st ok">구현</span></div>
+      <div class="lane-row"><div class="lane-name">분기/반복</div><div class="lane-body">
+        <div class="decision"><span>상황 변화?</span></div>
+        <div class="branch"><span class="yes">YES</span><div class="node unen">「상황 변화 대응」(도움말) → 관련 문서 재조회 → 조치 재선택 → 추가 SOP 버전(실행이력 유지) / 상황변화 메모(원장 user)</div></div>
+        <div class="branch"><span class="no">NO</span><div class="node unen">다음 SOP 노드 계속 실행</div></div>
+        <span class="arrow">→</span>
+        <div class="decision"><span>종료 노드 도달?</span></div>
+        <div class="branch"><span class="no">NO</span><div class="node unen">실행 루프 지속</div></div>
+        <div class="branch"><span class="yes">YES</span><div class="node unen">완료 안내창 → 상황일지 작성으로</div></div>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>6. 상세 순서도 — D. 수습·복구 → 상황일지 → 결과보고</h2>
+    <div class="flowblock">
+      <div class="block-title">D-1. 수습·복구도 동일 Core (문서 재조회 → 조치 → 추가 SOP) <span class="st ok">구현</span></div>
+      <div class="lane-row"><div class="lane-name">사용자 / UNE</div><div class="lane-body">
+        <div class="decision"><span>추가 수습·복구 SOP?</span></div>
+        <div class="branch"><span class="yes">YES</span><div class="node unen">현재상황 + 조치결과 Context 로 문서·조치 선택 탭 복귀 → 새 SOP 버전</div></div>
+        <div class="branch"><span class="no">NO</span><div class="node unen">실행이력·조치결과 정리</div></div>
+      </div></div>
+    </div>
+    <div class="flowblock">
+      <div class="block-title">D-2. 상황일지 <span class="st ok">구현</span> <span class="st part">UNI 실검증</span></div>
+      <div class="lane-row"><div class="lane-name">UNE</div><div class="lane-body">
+        <div class="node unen"><strong>상황 이벤트 원장</strong>situation·weather·document·sop·run(세부행동 포함)·result·memo·sms(상황전파)·resource·injection·mission(현장 응답)·branch·user</div><span class="arrow">→</span>
+        <div class="node usern"><strong>유형 필터 · 확인/확인 필요/제외</strong></div><span class="arrow">→</span>
+        <div class="node unen"><strong>buildContext</strong>선택 이벤트 · 템플릿 · Asia/Seoul 시각</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">UNI RAG</div><div class="lane-body">
+        <div class="node unin"><strong>일반 챗 SSE</strong>/api/uni/chat → Markdown 초안(일자 ### · 시각 불릿 · 종합)</div>
+        <div class="branch"><span class="no">접속 불가</span><div class="node extn">규칙 기반 대체 초안(lib/uni/fallback) · 출처 fallback 배지</div></div>
+        <span class="arrow">→</span>
+        <div class="node usern"><strong>편집 / 분할 / 미리보기 → 확정</strong>Markdown(react-markdown) · 수정 이력</div><span class="arrow">→</span>
+        <div class="node datan">HWPX · DOCX · PDF</div>
+      </div></div>
+    </div>
+    <div class="flowblock">
+      <div class="block-title">D-3. 결과보고 <span class="st ok">구현</span> <span class="st part">HWPX 한컴 실검증</span></div>
+      <div class="lane-row"><div class="lane-name">결과보고</div><div class="lane-body">
+        <div class="node usern"><strong>보고 기본정보</strong>보고 구분(mode)·제목·기준시각</div><span class="arrow">→</span>
+        <div class="node unen"><strong>공통 목차</strong>REPORT_TOC(실제재난/훈련) · 포함 여부·제목·순서 편집</div><span class="arrow">→</span>
+        <div class="node usern"><strong>반영자료 선택</strong>조치결과·상황일지·SMS·상황전파 응답·자원·기상·훈련 이력</div><span class="arrow">→</span>
+        <div class="node unin"><strong>AI 본문 초안(UNI 챗)</strong>섹션별 Markdown · 대체 생성</div><span class="arrow">→</span>
+        <div class="node usern"><strong>Markdown 편집·미리보기</strong></div><span class="arrow">→</span>
+        <div class="node unen"><strong>본문 조립</strong>현황표 자동 생성(조치결과·SMS·상황전파 수신확인/임무완료·자원)</div><span class="arrow">→</span>
+        <div class="node unen"><strong>내보내기</strong>HWPX(행정문서 템플릿 스타일 ID 매핑) · DOCX · PDF</div>
+      </div></div>
+    </div>
+    <div class="subgrid">
+      <div class="box"><h4>시스템에서 자동 반영되는 자료</h4><ul><li>상황 기본정보 · 기상특보·기상요약(출처·확인상태)</li><li>SOP 실행이력 · 세부행동 체크 · 조치결과 · 상황판단 분기</li><li>상황전파 발송·수신확인·임무완료·현장 조치사항</li><li>자원 투입·회수 · 확정 상황일지 · 훈련 상황부여·임무이력</li></ul></div>
+      <div class="box"><h4>사용자 직접입력 자료</h4><ul><li>피해·복구 현황 · 대피·이재민 현황</li><li>인력·장비 투입(자원 등록 외) · 기관 지원사항 · 기타 현안</li><li>KRMS 정보는 실제 연계 전까지 자동자료로 사용하지 않음</li></ul></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>7. 시연모드 흐름 <span class="st ok">구현</span></h2>
+    <div class="flowblock new">
+      <div class="block-title">헤더 「시연모드」 → 플로팅 패널(모달 아님) → 「다음」마다 화면 이동 + 데이터 조작 + 내레이션 · 산불(경북 안동·의성) 15단계</div>
+      <div class="lane-row"><div class="lane-name">단계</div><div class="lane-body">
+        <div class="node usern">1 대시보드</div><span class="arrow">→</span><div class="node usern">2 새 업무 시작</div><span class="arrow">→</span><div class="node unen">3 상황 등록·기상</div><span class="arrow">→</span><div class="node unen">4 문서·조치 선택</div><span class="arrow">→</span><div class="node unen">5 SOP 자동 구성</div><span class="arrow">→</span><div class="node usern">6 SOP 라이브러리</div><span class="arrow">→</span><div class="node unen">7 실행본 확정·시작(안내창)</div><span class="arrow">→</span><div class="node unen">8 세부행동 체크·조치결과</div><span class="arrow">→</span><div class="node unen">9 상황전파 발송·자원</div><span class="arrow">→</span><div class="node mobn">10 현장 응답 수신(모의)</div><span class="arrow">→</span><div class="node unen">11 상황 변화 대응</div><span class="arrow">→</span><div class="node unen">12 실행 완료(안내창)</div><span class="arrow">→</span><div class="node unin">13 상황일지 AI 초안</div><span class="arrow">→</span><div class="node unin">14 결과보고·내보내기</div><span class="arrow">→</span><div class="node usern">15 마무리(시연 데이터 삭제 가능)</div>
+      </div></div>
+      <div class="lane-row"><div class="lane-name">패널</div><div class="lane-body">
+        <div class="node unen">접기(필) · 좌/우 도킹 · 자동 진행(12초) · Alt+←/→ · 단계 목록 점프 · 넓은 화면에서는 본문이 패널 폭만큼 비켜 콘텐츠를 가리지 않음</div>
+        <div class="node datan">sessionStorage 진행 상태 · 단계별 조치 카드 자동 선택 · 상황일지/결과보고 AI 생성 원격 트리거</div>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>8. 흐름 ↔ 구현 매핑</h2>
+    <table class="map">
+      <tr><th style="width:18%">흐름</th><th style="width:30%">화면 · 모듈</th><th style="width:10%">상태</th><th>비고</th></tr>
+      <tr><td>0 사전 준비</td><td>/sops, /sops/[id] · /settings/org(조직도·목록·전송그룹) · lib/org/excel · seed/contacts</td><td><span class="st ok">구현</span></td><td>기본 SOP 3종 · 연락처 40명·그룹 5개 Seed(부산 매뉴얼 재대본 편성)</td></tr>
+      <tr><td>A 시작·Context</td><td>/situations/new · 상황·기상 탭 · useAppStore.createSituation</td><td><span class="st ok">구현</span> <span class="st mock">기상</span></td><td>기상특보·요약은 Seed/Mock</td></tr>
+      <tr><td>B 문서·조치·SOP 구성</td><td>문서·조치 선택 탭 · lib/t3q/adapter(Mock) · lib/sop/{adapter,converters,compn} · SOP 구성·편집 탭 · SidePanel</td><td><span class="st ok">구현</span> <span class="st mock">T3Q</span> <span class="st part">AI</span></td><td>AI 는 UNI /chat/json, 사내망 실검증 필요</td></tr>
+      <tr><td>C 실행·전파·응답</td><td>실행·조치결과 탭(RunTab) · DispatchModal · ContactPicker · /m/[token] · /api/dispatch* · useDispatchSync · Upstash</td><td><span class="st ok">구현</span> <span class="st mock">실발송</span> <span class="st plan">KRMS</span></td><td>iOS 실기기 미검증 · SMS/메일 실발송 연계 자리</td></tr>
+      <tr><td>D 상황일지·결과보고</td><td>상황일지·결과보고 탭 · /api/uni/chat · lib/uni/{client,prompts,fallback} · lib/export/{markdown,hwpx,docx,build}</td><td><span class="st ok">구현</span> <span class="st part">UNI·HWPX</span></td><td>HWPX 한컴 실제 열기 확인 필요</td></tr>
+      <tr><td>시연모드</td><td>AppShell 「시연모드」 · components/demo/DemoPanel · lib/demo/scenario · useDemoStore</td><td><span class="st ok">구현</span></td><td>휴대폰 QR 스캔 실연동 시연 가능</td></tr>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>9. 업무흐름도 작성 원칙</h2>
+    <div class="rules">
+      <div class="rule"><b>① 문서는 상세하게</b><span>개발·UIUX·기관협의 기준이므로 문서조회, 조치조회, SOP 구성, 전파·응답의 분리된 단계와 데이터 생성지점·구현 모듈을 표시한다.</span></div>
+      <div class="rule"><b>② 실제 화면은 단순하게</b><span>문서 선택은 파일명만, 조치 선택은 체크 위주, 현장 모바일 페이지는 필요한 정보와 3개 버튼만.</span></div>
+      <div class="rule"><b>③ UI 구현과 AI 역할 분리</b><span>T3Q/UNI 는 문서·조치 상세·초안을 제공하고 조치 간 관계·분기·실행은 요구하지 않는다. UNE 가 Flow 를 구성하고 상황판단·분기·채널은 사용자가 편집한다. AI 장애 시에도 업무가 멈추지 않는다.</span></div>
+      <div class="rule"><b>④ 실제재난/훈련 공통 Core</b><span>안전한국훈련은 시작 Context 와 상황부여 방식만 다르고, SOP·실행·전파·상황일지·결과보고 Core 는 공통이다.</span></div>
+      <div class="rule"><b>⑤ 편집과 실행의 분리</b><span>SOP 라이브러리(초안·게시)와 상황 실행본(배포 스냅샷)을 분리해 진행 중 상황이 원본 변경에 영향받지 않는다.</span></div>
+      <div class="rule"><b>⑥ 조직은 매뉴얼 편성대로</b><span>지휘부·13개 협업기능별 실무반·유관기관 → 부서 → 사람. 주관/지원/협업은 조치별 역할로 SOP 노드에 두고 전파 시 추천에만 사용한다.</span></div>
+      <div class="rule"><b>⑦ 현장 응답은 폐루프로</b><span>상황전파 → 인증 없는 링크(최소 정보) → 수신확인·임무완료·조치사항 → 실행내역·상황일지·결과보고 자동 반영. 급박한 현장을 고려해 인증·앱 설치를 요구하지 않는다.</span></div>
+      <div class="rule"><b>⑧ 결과보고는 UNE 독립 구성</b><span>공통 목차·자료 선택·직접입력·본문 조립·HWPX 출력을 UNE 가 담당하고, AI 초안은 선택 적용한다.</span></div>
+    </div>
+  </section>
+
+  <div class="footer">v1.2 (2026-09-14) · v1.1 흐름도에 프로토타입 개발 결과 반영. 0(사전 준비: SOP 라이브러리·조직·연락처·전송그룹), B-3(SOP 준비 3경로·UNI RAG), C-1(시작/종료 안내창), C-2(세부행동 체크), C-3(상황전파 → 모바일 응답 → 자동 반영), 7(시연모드), 8(구현 매핑) 추가. T3Q 는 Mock 어댑터, SMS/메일 실발송·KRMS 는 연계 자리.</div>
+</div>
+</body>
+</html>
